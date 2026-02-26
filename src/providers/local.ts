@@ -24,33 +24,39 @@ export class LocalProvider implements RewriteProvider {
     this.endpoint = config.endpoint;
     this.model = config.model ?? "local";
     this.apiKey = config.apiKey;
-    this.requestTimeoutMs = config.requestTimeoutMs ?? 12000;
+    this.requestTimeoutMs = config.requestTimeoutMs ?? 120000;
     this.apiFlavor = config.apiFlavor ?? "auto";
     this.systemPromptPath =
       config.systemPromptPath ??
       path.resolve(process.cwd(), "tasks", "humanizer-system-prompt.md");
   }
 
-  private async getSystemPrompt(): Promise<string> {
-    if (this.systemPromptCache) {
-      return this.systemPromptCache;
+  private async getSystemPrompt(isLargeInput: boolean): Promise<string> {
+    if (isLargeInput) {
+      console.log("[LocalProvider] Large input detected, using 'Lite' system prompt to save context space.");
     }
+    const promptPath = isLargeInput 
+      ? path.resolve(process.cwd(), "tasks", "humanizer-system-prompt-lite.md")
+      : this.systemPromptPath;
 
     try {
-      const prompt = await fs.readFile(this.systemPromptPath, "utf8");
+      const prompt = await fs.readFile(promptPath, "utf8");
       const normalized = prompt.trim();
       if (!normalized) {
         throw new ProviderError(
           "PROVIDER_MISCONFIGURED",
-          `System prompt file is empty: ${this.systemPromptPath}`,
+          `System prompt file is empty: ${promptPath}`,
         );
       }
-      this.systemPromptCache = normalized;
-      return this.systemPromptCache;
+      return normalized;
     } catch (_error) {
+      // If lite prompt fails to load, fallback to default
+      if (isLargeInput && promptPath !== this.systemPromptPath) {
+        return this.getSystemPrompt(false);
+      }
       throw new ProviderError(
         "PROVIDER_MISCONFIGURED",
-        `Failed to load local system prompt: ${this.systemPromptPath}`,
+        `Failed to load system prompt: ${promptPath}`,
       );
     }
   }
@@ -64,8 +70,11 @@ export class LocalProvider implements RewriteProvider {
     }
 
     try {
-      const systemPrompt = await this.getSystemPrompt();
+      const isLarge = text.length > 2000;
+      const systemPrompt = await this.getSystemPrompt(isLarge);
       const endpoint = this.resolveLocalEndpoint(this.endpoint);
+      const requestBody = this.buildRequestBody(systemPrompt, text, options);
+      
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -73,15 +82,29 @@ export class LocalProvider implements RewriteProvider {
           ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
         },
         signal: AbortSignal.timeout(this.requestTimeoutMs),
-        body: JSON.stringify(
-          this.buildRequestBody(systemPrompt, text, options),
-        ),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
+        let errorDetails = "";
+        try {
+          const errorPayload = await response.json();
+          errorDetails = JSON.stringify(errorPayload);
+        } catch {
+          errorDetails = await response.text();
+        }
+        
+        if (errorDetails.includes("n_ctx") || errorDetails.includes("context length")) {
+          throw new ProviderError(
+            "PAYLOAD_TOO_LARGE",
+            "The text is too long for the local model's current context window. Try increasing 'Context Length' in LM Studio settings.",
+            { status: 413 }
+          );
+        }
+
         throw new ProviderError(
           "PROVIDER_FAILED",
-          `Local model request failed`,
+          `Local model request failed (${response.status}): ${errorDetails}`,
           { status: response.status },
         );
       }
@@ -107,43 +130,36 @@ export class LocalProvider implements RewriteProvider {
       ) {
         throw new ProviderError("TIMEOUT", "Local model request timed out");
       }
-      throw new ProviderError("PROVIDER_FAILED", "Local model request failed", {
-        details: { source: String((error as Error).message ?? error) },
+      const originalMessage = (error as Error).message ?? String(error);
+      throw new ProviderError("PROVIDER_FAILED", `Local model request failed: ${originalMessage}`, {
+        details: { source: originalMessage },
       });
     }
   }
 
   private resolveLocalEndpoint(endpoint: string): string {
     const trimmed = endpoint.trim().replace(/\/$/, "");
-    const isOpenAICompatEndpoint =
-      this.apiFlavor === "openai" ||
-      (this.apiFlavor === "auto" &&
-        (trimmed.includes("/v1/chat/completions") ||
-          trimmed.endsWith("/v1/chat/completions")));
-
-    if (isOpenAICompatEndpoint) {
+    
+    // If it already looks like a full chat completions endpoint, return it
+    if (trimmed.endsWith("/v1/chat/completions") || 
+        trimmed.endsWith("/api/v1/chat") || 
+        trimmed.endsWith("/v1/chat")) {
       return trimmed;
     }
 
-    if (trimmed.endsWith("/api/v1/chat")) {
-      return trimmed;
-    }
-
-    if (trimmed.endsWith("/api/v1")) {
-      return `${trimmed}/chat`;
-    }
-
-    if (
-      trimmed.endsWith("/v1") ||
-      trimmed.endsWith("/v1/") ||
-      trimmed.endsWith("/api") ||
-      trimmed.endsWith("/api/")
-    ) {
-      return `${trimmed}/chat/completions`;
-    }
-
+    // LM Studio specific or auto-detected flavor handling
     if (this.apiFlavor === "lmstudio") {
       return `${trimmed}/api/v1/chat`;
+    }
+
+    if (this.apiFlavor === "openai") {
+      return `${trimmed}/v1/chat/completions`;
+    }
+
+    // Fallback/Auto logic for base URLs
+    if (trimmed.endsWith(":1234")) {
+      // Very likely LM Studio default
+      return `${trimmed}/v1/chat/completions`;
     }
 
     return `${trimmed}/v1/chat/completions`;
@@ -289,15 +305,15 @@ export class LocalProvider implements RewriteProvider {
     }
 
     for (const candidate of candidateValues) {
-      const text = toText(candidate);
-      if (typeof text === "string") {
-        return text;
+          const text = toText(candidate);
+          if (typeof text === "string") {
+            // Post-process to remove reasoning tags like <think>...</think>
+            return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+          }
+        }
+      
+        return undefined;
       }
-    }
-
-    return undefined;
-  }
-
   async rewrite(input: HumanizeInput): Promise<ProviderResult> {
     const startedAt = Date.now();
 

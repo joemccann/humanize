@@ -1,251 +1,129 @@
-<!doctype html>
-<html lang="en" data-theme="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Humanize rewrites pasted text to sound more natural and human."
-    />
-    <title>Humanize</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    />
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <div class="page">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">H</span>
-          <div>
-            <p class="brand-title">Humanize</p>
-            <p class="brand-subtitle">AI writing cleanup, tuned for people</p>
-          </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Humanize</title>
+  <meta name="description" content="Humanize rewrites pasted text to sound more natural and human.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,100..900&family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="grain-overlay"></div>
+  
+  <nav>
+    <div style="font-family: var(--font-serif); font-size: 1.2rem; font-weight: 900;">HUMANIZE_MANIFESTO</div>
+    <button id="settings-toggle" class="btn" aria-controls="settings-overlay" aria-expanded="false" style="padding: 8px 16px; font-size: 0.8rem; border-color: transparent;">SETTINGS</button>
+  </nav>
+
+  <main class="manifesto-container">
+    <div class="fade-in">
+      <h1 class="hero-title">SAY_IT_<br>HUMAN</h1>
+      
+      <form id="humanize-form">
+        <div class="text-area-wrapper">
+          <div style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.2em; margin-bottom: 20px; opacity: 0.4;">Input_Buffer</div>
+          <textarea id="input" name="input" class="v-input" placeholder="Paste your AI text here..." required></textarea>
         </div>
-        <div class="topbar-actions">
-          <button
-            id="settings-toggle"
-            type="button"
-            class="btn btn-ghost btn-theme-toggle"
-            aria-expanded="false"
-            aria-controls="settings-overlay"
-            aria-label="Open settings"
-          >
-            <i data-lucide="settings" aria-hidden="true" class="theme-icon"></i>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+          <button id="submit" class="btn-large" type="submit">
+             <span class="btn-label">Execute_Transformation</span>
           </button>
+          
+          <div style="display: flex; gap: 10px; align-items: center; opacity: 0.8; font-family: var(--font-sans); font-size: 0.8rem;">
+            <label for="tone" class="sr-only">Tone</label>
+            <select id="tone" name="tone" class="minimal-select">
+              <option value="natural" selected>Natural</option>
+              <option value="casual">Casual</option>
+              <option value="professional">Professional</option>
+            </select>
+            <label for="provider" class="sr-only">Provider</label>
+            <select id="provider" name="provider" class="minimal-select">
+              <option value="auto" selected>Auto</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="local">Local</option>
+            </select>
+          </div>
         </div>
-      </header>
+        <p id="provider-hint" class="status"></p>
+        <p id="status" class="status" aria-live="polite">READY</p>
+        
+        <!-- Hidden advanced controls -->
+        <div style="display: none;">
+           <input id="maxTokens" name="maxTokens" type="number">
+           <input id="preserveMeaning" name="preserveMeaning" type="checkbox" checked>
+        </div>
+      </form>
 
-      <section class="hero">
-        <p class="eyebrow">Text utility</p>
-        <h1 class="hero-title">Humanize text in one pass</h1>
-        <p class="hero-copy">
-          Paste draft copy, choose a style, and review a cleaner version you can use.
-          You keep control: source text, options, and explicit export.
-        </p>
-      </section>
+      <div class="output-section">
+        <div class="status-badge" id="output-badge" style="opacity: 0;">Manifesto_Complete</div>
+        <div style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.2em; margin-bottom: 40px; opacity: 0.4;">Editorial_Output</div>
+        
+        <textarea id="output" class="v-output" readonly aria-label="Humanized text"></textarea>
 
-      <main class="panel-grid" aria-label="Humanize workflow">
-        <section class="panel">
-          <form id="humanize-form" class="stack">
-            <div class="panel-head">
-              <h2 class="panel-title">Source text</h2>
-              <p class="panel-copy">
-                Add text to humanize. Keep paragraphs and headings if you want, but remove
-                robot-sounding language and repetitive style patterns.
-              </p>
-            </div>
-
-            <label class="sr-only" for="input">Source text</label>
-            <div class="textarea-wrap">
-              <textarea
-                id="input"
-                name="input"
-                placeholder="Paste your text here..."
-                aria-label="Input text"
-                required
-              ></textarea>
-            </div>
-
-            <fieldset class="form-grid">
-              <div>
-                <label for="tone">Tone</label>
-                <select id="tone" name="tone">
-                  <option value="natural" selected>Natural</option>
-                  <option value="casual">Casual</option>
-                  <option value="professional">Professional</option>
-                </select>
-              </div>
-              <div>
-                <label for="provider">Provider</label>
-                <select id="provider" name="provider">
-                  <option value="auto" selected>Auto</option>
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="local">Local</option>
-                </select>
-                <p id="provider-hint" class="status" role="status" aria-live="polite"></p>
-              </div>
-              <div>
-                <label for="maxTokens">Max output tokens</label>
-                <input
-                  id="maxTokens"
-                  name="maxTokens"
-                  type="number"
-                  min="1"
-                  placeholder="Default"
-                />
-              </div>
-              <label class="checkbox-row">
-                <input id="preserveMeaning" name="preserveMeaning" type="checkbox" checked />
-                <span>Preserve meaning</span>
-              </label>
-            </fieldset>
-
-            <div class="actions" role="group" aria-label="Workflow controls">
-              <button id="submit" class="btn btn-primary btn-primary-action" type="submit">
-                <span class="btn-label">Transform</span>
-                <span class="spinner" aria-hidden="true"></span>
-              </button>
-                <p id="status" role="status" aria-live="polite" class="status">Ready</p>
-            </div>
-          </form>
-        </section>
-
-        <section class="panel">
-          <div class="stack">
-            <div class="panel-head panel-header">
-              <h2 class="panel-title">Humanized text</h2>
-              <p class="panel-copy">Review the rewritten result before copying.</p>
-            </div>
-
-            <div class="textarea-wrap">
-              <textarea id="output" readonly aria-label="Humanized text"></textarea>
-            </div>
-
-            <div class="actions">
-              <button id="copy" class="btn btn-primary" type="button" disabled>Copy to clipboard</button>
-              <p id="copy-state" aria-live="polite" class="status"></p>
-            </div>
-
-            <section id="meta" class="meta" aria-live="polite">
-              <dl class="meta-grid" aria-label="Run metadata">
-                <div>
-                  <dt>Provider</dt>
-                  <dd id="providerOut">-</dd>
-                </div>
-                <div>
-                  <dt>Auth source</dt>
-                  <dd id="providerAuth">-</dd>
-                </div>
-                <div>
-                  <dt>Latency</dt>
-                  <dd id="latency">-</dd>
-                </div>
-                <div>
-                  <dt>Input / Output</dt>
-                  <dd id="counts">- / -</dd>
-                </div>
-                <div>
-                  <dt>Edits</dt>
-                  <dd id="edits">-</dd>
-                </div>
-              </dl>
-            </section>
-
-            <section class="warnings">
-              <h3>Warnings</h3>
-              <ul id="warnings"></ul>
-            </section>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <div id="settings-overlay" class="settings-overlay" hidden>
-      <div class="settings-overlay__backdrop" data-close-settings aria-hidden="true"></div>
-      <aside id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-        <div class="settings-panel__head">
-          <div>
-            <h2 id="settings-title">Settings</h2>
-            <p class="settings-panel__subtitle">
-              Manage API keys and appearance preferences.
-            </p>
-          </div>
-          <button
-            id="settings-close"
-            type="button"
-            class="btn btn-ghost btn-theme-toggle"
-            aria-label="Close settings"
-            data-close-settings
-          >
-            <i data-lucide="x" aria-hidden="true" class="theme-icon"></i>
-          </button>
+        <div style="margin-top: 80px; display: flex; gap: 40px; flex-wrap: wrap;">
+          <button id="copy" class="btn" style="border-color: var(--color-paper); color: var(--color-paper); padding: 18px 36px;" disabled>COPY_TO_CLIPBOARD</button>
+          <span id="copy-state" class="status" style="align-self: center;" aria-live="polite"></span>
         </div>
 
-        <section class="settings-section">
-          <h3>Provider API keys</h3>
-          <p class="panel-copy">
-            Add and save keys to call OpenAI and/or Anthropic directly from your browser. Keys stay
-            client-side and are sent only with your request.
-          </p>
-          <div class="form-grid">
-            <div>
-              <label for="openaiKey">OpenAI API key</label>
-              <input id="openaiKey" name="openaiKey" type="password" placeholder="sk-..." autocomplete="off" />
-            </div>
-            <div>
-              <label for="anthropicKey">Anthropic API key</label>
-              <input
-                id="anthropicKey"
-                name="anthropicKey"
-                type="password"
-                placeholder="sk-ant-..."
-                autocomplete="off"
-              />
-            </div>
-          </div>
-          <div class="actions key-actions">
-            <label class="checkbox-row">
-              <input
-                id="keys-ephemeral"
-                name="keys-ephemeral"
-                type="checkbox"
-              />
-              <span>Clear saved keys when this tab closes</span>
-            </label>
-            <div class="settings-buttons">
-              <button id="save-keys" class="btn btn-primary" type="button">Save keys</button>
-              <button id="clear-keys" class="btn btn-ghost" type="button">Clear keys</button>
-            </div>
-            <p id="key-status" role="status" aria-live="polite" class="status"></p>
-          </div>
-        </section>
-
-        <section class="settings-section">
-          <h3>Appearance</h3>
-          <p class="panel-copy">Switch between light and dark theme.</p>
-          <div class="actions" style="margin-top: 0.5rem">
-            <button
-              id="theme-toggle"
-              type="button"
-              class="btn btn-primary"
-              aria-pressed="false"
-            >
-              <i data-lucide="sun" aria-hidden="true" class="theme-icon theme-icon-sun"></i>
-              <i data-lucide="moon" aria-hidden="true" class="theme-icon theme-icon-moon"></i>
-              <span class="theme-label">Switch theme</span>
-            </button>
-          </div>
-        </section>
-      </aside>
+        <!-- Meta info -->
+        <div style="margin-top: 60px; font-family: var(--font-sans); font-size: 0.8rem; opacity: 0.6; display: flex; gap: 30px; flex-wrap: wrap; text-transform: uppercase;">
+           <div>Provider: <strong id="providerOut">-</strong> (<strong id="providerAuth">-</strong>)</div>
+           <div>Latency: <strong id="latency">-</strong></div>
+           <div>I/O: <strong id="counts">- / -</strong></div>
+           <div>Edits: <strong id="edits">-</strong></div>
+        </div>
+        <div style="margin-top: 30px;">
+           <ul id="warnings" style="list-style: none; padding: 0; font-family: var(--font-sans); font-size: 0.8rem; color: var(--color-accent); line-height: 1.8;"></ul>
+        </div>
+      </div>
     </div>
+  </main>
 
-    <script src="/assets/lucide.js"></script>
-    <script type="module" src="/app.js"></script>
-  </body>
+  <footer style="padding: 80px 40px; text-align: center;">
+     <p style="font-family: var(--font-serif); font-size: 0.8rem; opacity: 0.4;">HUMANIZE / 2026 / MANIFESTO_EDITION</p>
+  </footer>
+
+  <!-- Settings Overlay -->
+  <div id="settings-overlay" class="settings-overlay" hidden>
+     <div class="settings-overlay__backdrop" data-close-settings aria-hidden="true"></div>
+     <aside id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 60px; align-items: center;">
+           <h2 id="settings-title" style="font-family: var(--font-serif); font-size: 2rem; margin: 0; font-weight: 300;">SETTINGS</h2>
+           <button id="settings-close" data-close-settings class="btn" style="border: none;" aria-label="Close settings">CLOSE</button>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+           <label for="openaiKey" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.1em;">OpenAI Key</label><br>
+           <input id="openaiKey" name="openaiKey" type="password" class="minimal-input" style="margin-top: 10px;" autocomplete="off">
+        </div>
+        <div style="margin-bottom: 30px;">
+           <label for="anthropicKey" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.1em;">Anthropic Key</label><br>
+           <input id="anthropicKey" name="anthropicKey" type="password" class="minimal-input" style="margin-top: 10px;" autocomplete="off">
+        </div>
+        <div style="margin-bottom: 40px; font-size: 0.9rem;">
+           <label style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+             <input id="keys-ephemeral" name="keys-ephemeral" type="checkbox"> 
+             <span>Ephemeral keys (this tab only)</span>
+           </label>
+        </div>
+        <div style="display: flex; gap: 10px;">
+           <button id="save-keys" class="btn btn-primary" type="button">SAVE_KEYS</button>
+           <button id="clear-keys" class="btn btn-ghost" style="border: none; opacity: 0.5;" type="button">CLEAR</button>
+        </div>
+        <p id="key-status" class="status" aria-live="polite" style="margin-top: 20px;"></p>
+
+        <!-- Hidden theme toggle since manifesto is inverse-only but required by JS -->
+        <div style="display: none;">
+           <button id="theme-toggle" aria-pressed="false"></button>
+        </div>
+     </aside>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
 </html>

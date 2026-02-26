@@ -236,6 +236,13 @@ export class OpenAIProvider implements RewriteProvider {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new ProviderError(
+            "PROVIDER_MISCONFIGURED",
+            "OpenAI API key is invalid or has expired",
+            { status: 401 },
+          );
+        }
         throw new ProviderError(
           "PROVIDER_FAILED",
           `OpenAI request failed on attempt ${attempt}`,

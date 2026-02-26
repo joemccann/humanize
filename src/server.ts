@@ -186,26 +186,37 @@ function modelListContains(modelList: string[], target?: string): boolean {
   });
 }
 
-async function isLocalModelAvailable(config: {
+async function getDetectedLocalModel(config: {
   endpoint?: string;
   model?: string;
   apiKey?: string;
   apiFlavor: "auto" | "openai" | "lmstudio";
   requestTimeoutMs?: number;
-}): Promise<boolean> {
+}): Promise<{ modelId: string; flavor: "openai" | "lmstudio" } | null> {
   if (!config.endpoint) {
-    return false;
+    return null;
   }
 
   const timeoutMs = config.requestTimeoutMs ?? LOCAL_STARTUP_CHECK_MS;
-  const modelEndpoints = parseModelListCandidates(config.endpoint, config.apiFlavor);
+  const trimmed = config.endpoint.trim().replace(/\/$/, "");
+  
+  // Define candidates with their corresponding flavors
+  const candidates: Array<{ url: string; flavor: "openai" | "lmstudio" }> = [];
+  
+  if (config.apiFlavor === "openai" || config.apiFlavor === "auto") {
+    candidates.push({ url: `${trimmed}/v1/models`, flavor: "openai" });
+    candidates.push({ url: `${trimmed}/models`, flavor: "openai" });
+  }
+  if (config.apiFlavor === "lmstudio" || config.apiFlavor === "auto") {
+    candidates.push({ url: `${trimmed}/api/v1/models`, flavor: "lmstudio" });
+  }
 
-  for (const modelEndpoint of modelEndpoints) {
+  for (const candidate of candidates) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const response = await fetch(modelEndpoint, {
+      const response = await fetch(candidate.url, {
         method: "GET",
         headers: {
           ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}),
@@ -219,8 +230,16 @@ async function isLocalModelAvailable(config: {
 
       const payload = await response.json();
       const models = extractModelIds(payload);
-      if (modelListContains(models, config.model)) {
-        return true;
+      
+      if (config.model) {
+        if (modelListContains(models, config.model)) {
+          return { modelId: config.model, flavor: candidate.flavor };
+        }
+      } else if (models.length > 0) {
+        // If no model specified, pick the first one that looks like an LLM
+        // (excluding embedding models if possible)
+        const bestModel = models.find(id => !id.toLowerCase().includes("embed")) || models[0];
+        return { modelId: bestModel, flavor: candidate.flavor };
       }
     } catch (_error) {
       continue;
@@ -229,7 +248,7 @@ async function isLocalModelAvailable(config: {
     }
   }
 
-  return false;
+  return null;
 }
 
 function resolveStartupProviderOrder(isLocalAvailable: boolean): ProviderOrder {
@@ -309,6 +328,7 @@ export function createHumanizeHttpServer(options: HumanizeServerOptions = {}) {
         const output = await activeService(apiBody as HumanizeInput);
         sendJson(res, 200, output);
       } catch (error) {
+        console.error(`[API Error] POST /api/humanize:`, error);
         const mapped = mapErrorToHttp(error);
         sendErrorResponse(res, mapped.status, mapped.code, mapped.message, mapped.details);
       }
@@ -333,9 +353,14 @@ export function createHumanizeHttpServer(options: HumanizeServerOptions = {}) {
       if (
         pathname.startsWith("/assets/") ||
         pathname.startsWith("/styles") ||
-        pathname.startsWith("/app")
+        pathname.startsWith("/app") ||
+        pathname.startsWith("/.claude-design/") ||
+        pathname.startsWith("/__design_lab")
       ) {
-        const requestedPath = path.join(publicDir, pathname.replace(/^\//, ""));
+        const requestedPath = pathname.startsWith("/.claude-design/") 
+          ? path.join(__dirname, "..", pathname.replace(/^\//, ""))
+          : path.join(publicDir, pathname.replace(/^\//, ""));
+        
         await serveStatic(res, requestedPath);
         return;
       }
@@ -359,14 +384,25 @@ export async function startHumanizeServer(options: HumanizeServerOptions = {}): 
       LOCAL_STARTUP_CHECK_MS,
     ),
   };
-  const isLocalModelUp = await isLocalModelAvailable(localModelConfig);
+  
+  const detectedLocal = await getDetectedLocalModel(localModelConfig);
+  const isLocalModelUp = detectedLocal !== null;
   const startupProviderOrder = resolveStartupProviderOrder(isLocalModelUp);
 
-  console.log(
-    `Local model availability check (${localEndpoint}): ${
-      isLocalModelUp ? "available" : "unavailable"
-    }`,
-  );
+  if (detectedLocal) {
+    console.log(
+      `Local model detected: ${detectedLocal.modelId} (${detectedLocal.flavor} flavor) at ${localEndpoint}`,
+    );
+    // Persist for service creation
+    if (!process.env.LOCAL_LLM_MODEL) {
+      process.env.LOCAL_LLM_MODEL = detectedLocal.modelId;
+    }
+    if (process.env.LOCAL_LLM_API_FLAVOR === "auto" || !process.env.LOCAL_LLM_API_FLAVOR) {
+      process.env.LOCAL_LLM_API_FLAVOR = detectedLocal.flavor;
+    }
+  } else {
+    console.log(`Local model availability check (${localEndpoint}): unavailable`);
+  }
 
   const port = options.port ?? Number(process.env.PORT ?? DEFAULT_PORT);
   const server = createHumanizeHttpServer({
@@ -432,7 +468,8 @@ export async function parseJsonBody(req: IncomingMessage): Promise<JsonBody> {
 
 async function serveStatic(res: ServerResponse, filePath: string): Promise<void> {
   const normalized = path.normalize(filePath);
-  if (!normalized.startsWith(publicDir)) {
+  const designDir = path.join(__dirname, "..", ".claude-design");
+  if (!normalized.startsWith(publicDir) && !normalized.startsWith(designDir)) {
     sendErrorResponse(res, 403, "FORBIDDEN", "Invalid path");
     return;
   }
@@ -485,19 +522,21 @@ export function mapErrorToHttp(error: unknown): {
 
   if (error instanceof ProviderError) {
     const details = error.details;
+    const status = error.status;
     switch (error.code) {
       case "INVALID_INPUT":
-        return { status: 400, code: error.code, message: error.message, details };
+        return { status: status ?? 400, code: error.code, message: error.message, details };
       case "PAYLOAD_TOO_LARGE":
-        return { status: 413, code: error.code, message: error.message, details };
+        return { status: status ?? 413, code: error.code, message: error.message, details };
       case "PROVIDER_MISCONFIGURED":
-        return { status: 422, code: error.code, message: error.message, details };
+        return { status: status ?? 422, code: error.code, message: error.message, details };
       case "TIMEOUT":
-        return { status: 408, code: error.code, message: error.message, details };
+        return { status: status ?? 408, code: error.code, message: error.message, details };
       case "PROVIDER_FAILED":
+        return { status: status ?? 502, code: error.code, message: error.message, details };
       case "INTERNAL_ERROR":
       default:
-        return { status: 500, code: error.code, message: error.message, details };
+        return { status: status ?? 500, code: error.code, message: error.message, details };
     }
   }
 
@@ -508,7 +547,12 @@ export function mapErrorToHttp(error: unknown): {
   };
 }
 
-if (import.meta.main) {
+const isEntryPoint =
+  process.argv[1] &&
+  path.resolve(process.argv[1]).replace(/\.tsx?$/, "") ===
+    __filename.replace(/\.tsx?$/, "");
+
+if (isEntryPoint) {
   startServer().catch((error) => {
     console.error("Failed to start server", error);
     process.exitCode = 1;

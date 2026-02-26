@@ -185,6 +185,13 @@ export class AnthropicProvider implements RewriteProvider {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new ProviderError(
+            "PROVIDER_MISCONFIGURED",
+            "Anthropic API key is invalid or has expired",
+            { status: 401 },
+          );
+        }
         throw new ProviderError(
           "PROVIDER_FAILED",
           `Anthropic request failed on attempt ${attempt}`,

@@ -426,7 +426,7 @@ function safeSubmitPayload() {
 }
 
 function resetCopyState() {
-  copyButton.textContent = 'Copy to clipboard';
+  copyButton.textContent = 'COPY_TO_CLIPBOARD';
   copyState.textContent = '';
 }
 
@@ -454,7 +454,7 @@ async function handleSubmit(event) {
   }
 
   setButtonLoading(true);
-  setStatus('Transforming...', 'success');
+  setStatus('TRANSFORMING...', 'success');
   clearMeta();
   copyButton.disabled = true;
   resetCopyState();
@@ -486,7 +486,9 @@ async function handleSubmit(event) {
     edits.textContent = `${data.stats?.editsEstimated ?? '-'}`;
     renderWarnings(data.warnings || []);
     copyButton.disabled = !output.value.trim();
-    setStatus('Done', 'success');
+    setStatus('MANIFESTO_COMPLETE', 'success');
+    const badge = document.querySelector('#output-badge');
+    if(badge) badge.style.opacity = '1';
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unexpected error';
     setStatus(`Error: ${message}`, 'error');
@@ -503,10 +505,10 @@ async function handleCopy() {
   try {
     await navigator.clipboard.writeText(output.value);
     copyState.textContent = 'Text copied';
-    copyButton.textContent = 'Copied';
+    copyButton.textContent = 'COPIED_TO_CLIPBOARD';
 
     setTimeout(() => {
-      copyButton.textContent = 'Copy to clipboard';
+      copyButton.textContent = 'COPY_TO_CLIPBOARD';
       copyState.textContent = '';
     }, 1200);
   } catch {
