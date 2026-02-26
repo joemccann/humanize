@@ -60,3 +60,16 @@
 - Keep milestones small enough for one coherent edit loop.
 - Run verification after each milestone and repair immediately on failure.
 - Always update `tasks/documentation.md` before continuing.
+
+## Session resume notes
+
+- Current working commit: `fc6c547`
+- Resume sequence:
+  - `cd /Users/joemccann/dev/apps/util/humanize`
+  - `npm install` (if dependencies changed)
+  - `npm run dev`
+  - Open `http://localhost:3000`
+- Runtime assumptions:
+  - Local provider probing runs against `localhost:1234` and is preferred when available.
+  - OpenAI and Anthropic calls require corresponding API keys saved in Settings before they can be selected.
+  - Dev server on `3001` was previously killed at handoff.
