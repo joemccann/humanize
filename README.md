@@ -57,3 +57,15 @@ The app uses a local-first provider flow. On startup it checks `http://localhost
 - MacOS MenuBar App
 - NextJS WebApp
 - iOS App
+
+## Session handoff
+
+Last update was made in this repository at `12f406b`.
+
+When you resume:
+- Start server from `/Users/joemccann/dev/apps/util/humanize` with `npm run dev`.
+- Open `http://localhost:3000`.
+- Dev server on `3001` was previously stopped.
+- Provider behavior remains:
+  - local-first startup probing against `localhost:1234`,
+  - OpenAI/Anthropic require saved keys in Settings before use.

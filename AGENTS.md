@@ -199,3 +199,14 @@ Use this dependency graph for work planning:
     - reduced-motion compliance and transform-backed open/close transition
     - icon button touch target adjusted to ~44px
     - minor accessibility touchups for mobile behavior and focus safety
+
+## Session handoff (2026-02-26)
+
+- Latest commit in this local repository: `12f406b` with 37-file import of the full Humanize implementation and docs.
+- I initialized git at `/Users/joemccann/dev/apps/util/humanize` during this session and committed all project files.
+- Runtime state at handoff:
+  - Dev server on port `3001` was actively running and has been terminated.
+  - If you restart, run `npm run dev` from `/Users/joemccann/dev/apps/util/humanize` and open `http://localhost:3000`.
+- Continue with existing workflow:
+  - default path still uses local model first when `localhost:1234` responds with model availability,
+  - BYOK OpenAI/Anthropic remains settings-required for cloud provider calls.
