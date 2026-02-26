@@ -1,0 +1,22 @@
+{
+  "name": "humanize",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc --noEmit",
+    "test": "node --test --import tsx/esm tests/**/*.test.ts",
+    "test:unit": "node --test --import tsx/esm tests/unit/*.test.ts",
+    "test:integration": "node --test --import tsx/esm tests/integration/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "lucide": "^0.575.0"
+  }
+}

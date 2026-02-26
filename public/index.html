@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Humanize rewrites pasted text to sound more natural and human."
+    />
+    <title>Humanize</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">H</span>
+          <div>
+            <p class="brand-title">Humanize</p>
+            <p class="brand-subtitle">AI writing cleanup, tuned for people</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button
+            id="settings-toggle"
+            type="button"
+            class="btn btn-ghost btn-theme-toggle"
+            aria-expanded="false"
+            aria-controls="settings-overlay"
+            aria-label="Open settings"
+          >
+            <i data-lucide="settings" aria-hidden="true" class="theme-icon"></i>
+          </button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <p class="eyebrow">Text utility</p>
+        <h1 class="hero-title">Humanize text in one pass</h1>
+        <p class="hero-copy">
+          Paste draft copy, choose a style, and review a cleaner version you can use.
+          You keep control: source text, options, and explicit export.
+        </p>
+      </section>
+
+      <main class="panel-grid" aria-label="Humanize workflow">
+        <section class="panel">
+          <form id="humanize-form" class="stack">
+            <div class="panel-head">
+              <h2 class="panel-title">Source text</h2>
+              <p class="panel-copy">
+                Add text to humanize. Keep paragraphs and headings if you want, but remove
+                robot-sounding language and repetitive style patterns.
+              </p>
+            </div>
+
+            <label class="sr-only" for="input">Source text</label>
+            <div class="textarea-wrap">
+              <textarea
+                id="input"
+                name="input"
+                placeholder="Paste your text here..."
+                aria-label="Input text"
+                required
+              ></textarea>
+            </div>
+
+            <fieldset class="form-grid">
+              <div>
+                <label for="tone">Tone</label>
+                <select id="tone" name="tone">
+                  <option value="natural" selected>Natural</option>
+                  <option value="casual">Casual</option>
+                  <option value="professional">Professional</option>
+                </select>
+              </div>
+              <div>
+                <label for="provider">Provider</label>
+                <select id="provider" name="provider">
+                  <option value="auto" selected>Auto</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="local">Local</option>
+                </select>
+                <p id="provider-hint" class="status" role="status" aria-live="polite"></p>
+              </div>
+              <div>
+                <label for="maxTokens">Max output tokens</label>
+                <input
+                  id="maxTokens"
+                  name="maxTokens"
+                  type="number"
+                  min="1"
+                  placeholder="Default"
+                />
+              </div>
+              <label class="checkbox-row">
+                <input id="preserveMeaning" name="preserveMeaning" type="checkbox" checked />
+                <span>Preserve meaning</span>
+              </label>
+            </fieldset>
+
+            <div class="actions" role="group" aria-label="Workflow controls">
+              <button id="submit" class="btn btn-primary btn-primary-action" type="submit">
+                <span class="btn-label">Transform</span>
+                <span class="spinner" aria-hidden="true"></span>
+              </button>
+                <p id="status" role="status" aria-live="polite" class="status">Ready</p>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="stack">
+            <div class="panel-head panel-header">
+              <h2 class="panel-title">Humanized text</h2>
+              <p class="panel-copy">Review the rewritten result before copying.</p>
+            </div>
+
+            <div class="textarea-wrap">
+              <textarea id="output" readonly aria-label="Humanized text"></textarea>
+            </div>
+
+            <div class="actions">
+              <button id="copy" class="btn btn-primary" type="button" disabled>Copy to clipboard</button>
+              <p id="copy-state" aria-live="polite" class="status"></p>
+            </div>
+
+            <section id="meta" class="meta" aria-live="polite">
+              <dl class="meta-grid" aria-label="Run metadata">
+                <div>
+                  <dt>Provider</dt>
+                  <dd id="providerOut">-</dd>
+                </div>
+                <div>
+                  <dt>Auth source</dt>
+                  <dd id="providerAuth">-</dd>
+                </div>
+                <div>
+                  <dt>Latency</dt>
+                  <dd id="latency">-</dd>
+                </div>
+                <div>
+                  <dt>Input / Output</dt>
+                  <dd id="counts">- / -</dd>
+                </div>
+                <div>
+                  <dt>Edits</dt>
+                  <dd id="edits">-</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="warnings">
+              <h3>Warnings</h3>
+              <ul id="warnings"></ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="settings-overlay" class="settings-overlay" hidden>
+      <div class="settings-overlay__backdrop" data-close-settings aria-hidden="true"></div>
+      <aside id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="settings-panel__head">
+          <div>
+            <h2 id="settings-title">Settings</h2>
+            <p class="settings-panel__subtitle">
+              Manage API keys and appearance preferences.
+            </p>
+          </div>
+          <button
+            id="settings-close"
+            type="button"
+            class="btn btn-ghost btn-theme-toggle"
+            aria-label="Close settings"
+            data-close-settings
+          >
+            <i data-lucide="x" aria-hidden="true" class="theme-icon"></i>
+          </button>
+        </div>
+
+        <section class="settings-section">
+          <h3>Provider API keys</h3>
+          <p class="panel-copy">
+            Add and save keys to call OpenAI and/or Anthropic directly from your browser. Keys stay
+            client-side and are sent only with your request.
+          </p>
+          <div class="form-grid">
+            <div>
+              <label for="openaiKey">OpenAI API key</label>
+              <input id="openaiKey" name="openaiKey" type="password" placeholder="sk-..." autocomplete="off" />
+            </div>
+            <div>
+              <label for="anthropicKey">Anthropic API key</label>
+              <input
+                id="anthropicKey"
+                name="anthropicKey"
+                type="password"
+                placeholder="sk-ant-..."
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <div class="actions key-actions">
+            <label class="checkbox-row">
+              <input
+                id="keys-ephemeral"
+                name="keys-ephemeral"
+                type="checkbox"
+              />
+              <span>Clear saved keys when this tab closes</span>
+            </label>
+            <div class="settings-buttons">
+              <button id="save-keys" class="btn btn-primary" type="button">Save keys</button>
+              <button id="clear-keys" class="btn btn-ghost" type="button">Clear keys</button>
+            </div>
+            <p id="key-status" role="status" aria-live="polite" class="status"></p>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Appearance</h3>
+          <p class="panel-copy">Switch between light and dark theme.</p>
+          <div class="actions" style="margin-top: 0.5rem">
+            <button
+              id="theme-toggle"
+              type="button"
+              class="btn btn-primary"
+              aria-pressed="false"
+            >
+              <i data-lucide="sun" aria-hidden="true" class="theme-icon theme-icon-sun"></i>
+              <i data-lucide="moon" aria-hidden="true" class="theme-icon theme-icon-moon"></i>
+              <span class="theme-label">Switch theme</span>
+            </button>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <script src="/assets/lucide.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
