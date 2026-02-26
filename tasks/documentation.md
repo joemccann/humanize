@@ -49,3 +49,15 @@
 - API and web workflow wiring is now in place for local development.
 - T5 now includes unit and integration coverage, but browser UI interaction tests are pending.
 - Next milestone: T6 optional quality/perf hardening and local provider polish.
+
+## Session resume notes (2026-02-26)
+
+- Current branch commit: `12b1b5f` (includes prior handoff notes in `AGENTS.md` and `README.md`).
+- To resume:
+  - `cd /Users/joemccann/dev/apps/util/humanize`
+  - `npm run dev`
+  - Open `http://localhost:3000`
+- Runtime assumptions:
+  - Local-first startup probing prefers local at `localhost:1234`.
+  - OpenAI/Anthropic require keys in Settings before those providers can be selected.
+  - Port `3001` dev process was explicitly stopped at handoff.
