@@ -29,6 +29,8 @@ swift build
 swift test
 ```
 
+116 tests across 16 suites covering types, settings persistence, API service (request building, response parsing, error handling), whitespace normalization, multi-provider integration, and UI view instantiation.
+
 ## Create .app bundle
 
 ```bash

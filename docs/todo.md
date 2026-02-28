@@ -1,26 +1,23 @@
 # Humanize Task Plan
 
-## Tracked tasks
+## Completed
 
 - [x] T1: Finalize architecture, provider abstraction, and acceptance criteria
 - [x] T2: Add provider adapter interfaces and one provider implementation
 - [x] T3: Implement deterministic local rewrite pass for high-signal transformations
 - [x] T4: Build paste → transform → review/copy web workflow
 - [x] T5: Add tests (unit + integration + UI smoke)
-  - outcome: deterministic rewrite, provider fallback, and UI-state contracts covered.
-  - notes:
-    - Added unit tests for deterministic rewrite and fallback behavior.
-    - Added HTTP integration tests for API contracts.
-    - UI validated in manual desktop and mobile checks.
 - [x] T6: Add local model adapter wiring + quality/perf checks
-  - outcome: Local-first routing with LM Studio auto-detection.
-  - features:
-    - LM Studio auto-discovery for loaded models and API flavor (`openai`/`lmstudio`).
-    - Timeout handling with longer windows for larger local models.
-    - Lite prompt fallback when input size threatens context limits.
-    - `<think>` tag stripping for cleaner local output.
+- [x] T7: Build native macOS menu bar app (SwiftUI, BYOK, tone selection, appearance modes)
+- [x] T8: Refactor repo to macOS-only — remove Node.js/TS web app, promote macos/ to root
+- [x] T9: Expand test suite to 116 tests across 16 suites (~95% coverage)
+  - Unit: Types, normalizeWhitespace, SettingsStore (persistence, corruption fallback), API service edge cases
+  - Integration: settings→service flows, multi-provider round-trips, provider switching
+  - UI: view instantiation, NSHostingController rendering, appearance modes, AppDelegate
 
-## Notes
+## Up next
 
-- UI transitioned from standard cards to a two-column editorial layout.
-- Local provider supports LM Studio configuration and auto-configuration paths by default.
+- [ ] Code signing + notarization for distribution
+- [ ] Keyboard shortcut (global hotkey) to toggle popover
+- [ ] Sparkle or manual update mechanism
+- [ ] Clipboard watch mode (auto-detect paste, offer to humanize)

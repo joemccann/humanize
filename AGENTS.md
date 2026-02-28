@@ -22,7 +22,7 @@
 ## Validation policy
 
 - `swift build` must compile with zero errors and zero warnings.
-- `swift test` must pass before any merge.
+- `swift test` must pass (116 tests, 16 suites) before any merge.
 - `bash scripts/build-app.sh` must produce a signed `.app` bundle.
 
 ## Process
