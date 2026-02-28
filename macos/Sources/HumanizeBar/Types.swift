@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Tone
 
@@ -36,6 +37,33 @@ struct HumanizeResult: Sendable {
     let provider: AIProvider
     let model: String
     let latencyMs: Int
+}
+
+// MARK: - Appearance
+
+enum AppAppearance: String, CaseIterable, Sendable, Codable {
+    case system
+    case light
+    case dark
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
+    /// Always returns an explicit scheme — resolves "system" to the current OS appearance.
+    var resolvedColorScheme: ColorScheme {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system:
+            NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? .dark : .light
+        }
+    }
 }
 
 // MARK: - Error
