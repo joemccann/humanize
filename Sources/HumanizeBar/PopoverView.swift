@@ -574,7 +574,7 @@ struct PopoverView: View {
                 )
                 outputText = result.text
                 copyToClipboard(result.text)
-                statusMessage = "Done in \(result.latencyMs)ms — copied to clipboard"
+                statusMessage = "Done in \(formatLatencySeconds(result.latencyMs)) — copied to clipboard"
             } catch {
                 statusMessage = "Error: \(error.localizedDescription)"
             }
@@ -601,6 +601,29 @@ func normalizeInputWhitespace(_ text: String) -> String {
         .replacingOccurrences(of: "[\\t ]+", with: " ", options: .regularExpression)
         .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
         .replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
+}
+
+func formatLatencySeconds(_ latencyMs: Int) -> String {
+    let clampedMs = max(0, latencyMs)
+    let wholeSeconds = clampedMs / 1000
+    let remainingMs = clampedMs % 1000
+
+    guard remainingMs != 0 else { return "\(wholeSeconds)s" }
+
+    let roundedHundredths = (remainingMs + 5) / 10
+    if roundedHundredths == 0 {
+        return "\(wholeSeconds)s"
+    }
+    if roundedHundredths == 100 {
+        return "\(wholeSeconds + 1)s"
+    }
+
+    let tenths = roundedHundredths / 10
+    let hundredths = roundedHundredths % 10
+    if hundredths == 0 {
+        return "\(wholeSeconds).\(tenths)s"
+    }
+    return "\(wholeSeconds).\(tenths)\(hundredths)s"
 }
 
 // MARK: - NSTextView inset helper
