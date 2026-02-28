@@ -55,7 +55,7 @@ enum AppAppearance: String, CaseIterable, Sendable, Codable {
     }
 
     /// Always returns an explicit scheme — resolves "system" to the current OS appearance.
-    var resolvedColorScheme: ColorScheme {
+    @MainActor var resolvedColorScheme: ColorScheme {
         switch self {
         case .light: .light
         case .dark: .dark
