@@ -2,34 +2,46 @@
 
 ## Project context
 
-`humanize` is a text-processing app that removes signs of AI-generated writing.
-The visual identity is **Modern Editorial Manifesto**: high-contrast, tactile, and authoritative.
+`humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via OpenAI or Anthropic APIs.
 
-## Current progress
+## Tech stack
 
-- [x] **UI Overhaul:** Implemented Fraunces/Manrope typography and Inverted Manifesto layout.
-- [x] **Robust Local Path:** Auto-detection for LM Studio models, <think> tag stripping, and "Lite" prompt fallback.
-- [x] **Clean Error Handling:** Specific 401/413/502 error mapping for LLM providers.
-- [x] **Test Coverage:** Core deterministic rules and service fallback logic verified.
+- Swift 6.0, SwiftUI, Swift Package Manager
+- macOS 14+ (Sonoma)
+- Async/await networking (`URLSession`)
+- `@Observable` for state management
 
-## Engineering Standards (Updated)
+## Engineering standards
 
-- **Typography Pairing:** Headlines in Fraunces (weight 100-900), Body in Manrope (200-800).
-- **Tone & Voice:** Authoritative, uppercase UI labels (`EXECUTE_TRANSFORMATION`, `MANIFESTO_COMPLETE`).
-- **Local-First:** Proactively detect local LLMs before falling back to cloud providers.
-- **Context Efficiency:** Use "Lite" prompts for large inputs to maximize local model context space.
+- All types are `Sendable`; use `@MainActor` for UI-bound state.
+- Prefer value types and protocol conformance over inheritance.
+- Keep views thin — logic belongs in services and stores.
+- System prompt is embedded in `SystemPrompt.swift`, not fetched at runtime.
+- No third-party dependencies; use Foundation and SwiftUI APIs.
 
-## Roadmap
+## Validation policy
 
-- [ ] MacOS MenuBar App (Manifesto style)
-- [ ] NextJS WebApp migration (preserving vanilla CSS variables)
-- [ ] iOS App
+- `swift build` must compile with zero errors and zero warnings.
+- `swift test` must pass before any merge.
+- `bash scripts/build-app.sh` must produce a signed `.app` bundle.
 
-## Session handoff (2026-02-25)
+## Process
 
-- **State:** UI is fully overhauled. Local-first flow is robust and detects LM Studio.
-- **To resume:** `npm run dev` and open `http://localhost:3000`.
-- **Key Files:** 
-  - `public/styles.css`: The "Modern Editorial Manifesto" engine.
-  - `src/server.ts`: Handles model detection and error mapping.
-  - `src/providers/local.ts`: Orchestrates large-input logic and thinking-tag removal.
+1. **Plan**: write milestones in `docs/todo.md`.
+2. **Edit**: make targeted changes aligned to the active milestone.
+3. **Verify**: run `swift build && swift test` after changes.
+4. **Observe & Repair**: fix failures before moving forward.
+5. **Document**: update `docs/todo.md` and `docs/lessons.md` as needed.
+
+## Key files
+
+| File | Purpose |
+|---|---|
+| `Sources/HumanizeBar/HumanizeBarApp.swift` | App entry point |
+| `Sources/HumanizeBar/AppDelegate.swift` | Menu bar status item + popover |
+| `Sources/HumanizeBar/PopoverView.swift` | Main UI |
+| `Sources/HumanizeBar/HumanizeAPIService.swift` | API request orchestration |
+| `Sources/HumanizeBar/SettingsStore.swift` | Persisted user preferences |
+| `Sources/HumanizeBar/SystemPrompt.swift` | Embedded rewrite prompt |
+| `docs/system-prompt-lite.md` | Reference copy of the lite prompt |
+| `docs/lessons.md` | Cross-session lessons learned |

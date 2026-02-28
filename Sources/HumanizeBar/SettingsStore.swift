@@ -8,6 +8,7 @@ final class SettingsStore {
     private static let providerKey = "humanize.provider"
     private static let openaiKeyKey = "humanize.openaiAPIKey"
     private static let anthropicKeyKey = "humanize.anthropicAPIKey"
+    private static let appearanceKey = "humanize.appearance"
 
     private let defaults: UserDefaults
 
@@ -25,6 +26,10 @@ final class SettingsStore {
 
     var anthropicAPIKey: String {
         didSet { defaults.set(anthropicAPIKey, forKey: Self.anthropicKeyKey) }
+    }
+
+    var appearance: AppAppearance {
+        didSet { defaults.set(appearance.rawValue, forKey: Self.appearanceKey) }
     }
 
     var hasRequiredAPIKey: Bool {
@@ -52,5 +57,7 @@ final class SettingsStore {
 
         self.openaiAPIKey = defaults.string(forKey: Self.openaiKeyKey) ?? ""
         self.anthropicAPIKey = defaults.string(forKey: Self.anthropicKeyKey) ?? ""
+        self.appearance = defaults.string(forKey: Self.appearanceKey)
+            .flatMap(AppAppearance.init(rawValue:)) ?? .system
     }
 }
