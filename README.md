@@ -1,71 +1,64 @@
 # Humanize
 
-Humanize is an application that removes signs of AI-generated writing from text. Use when editing or reviewing text to make it sound more natural and human-written. Based on Wikipedia's comprehensive "Signs of AI writing" guide. Detects and fixes patterns including inflated symbolism, promotional language, superficial -ing analyses, vague attributions, em dash overuse, rule of three, AI vocabulary words, negative parallelisms, and excessive conjunctive phrases.
+A native macOS menu bar app that rewrites AI-generated text into natural, human-sounding prose. Paste text, pick a tone, and get rewritten output copied to your clipboard.
 
-## Usage
+## Features
 
-As a user, I want to be able to paste in my copied text and have Humanize automatically remove the AI slop from it. Then, I need to be able to easily copy the new text to use elsewhere.
+- Lives in the macOS menu bar — always one click away
+- Paste-in, humanize, copy-out workflow
+- BYOK: bring your own OpenAI or Anthropic API key
+- Tone selection: natural, casual, professional
+- Light, dark, and system appearance modes
+- Built with SwiftUI, no Electron, no web views
 
 ## Requirements
 
-In order to use Humanize you'll need to either have an API key powering the editing of the text or use a local model.
+- macOS 14 (Sonoma) or later
+- Swift 6.0+
+- An OpenAI or Anthropic API key
 
-- Anthropic API Key
-- OpenAI API Key
-- Local LLM Model
+## Build
 
-The app uses a local-first provider flow. On startup it checks `http://localhost:1234` for available models:
+```bash
+swift build
+```
 
-- If a local model is available, it defaults to Local.
-- If local is unavailable, it defaults to Auto and uses the cheapest available cloud providers by default.
-- If OpenAI is available it uses `gpt-4o-mini` by default.
-- If Anthropic is available it uses `claude-3-haiku-20240307` by default.
+## Test
 
-## Run locally
+```bash
+swift test
+```
 
-- Start the web workflow:
-  - `npm install`
-  - `npm run dev`
-- Open `http://localhost:3000`
-- The app auto-detects whether a local model is available and preselects it when present.
+116 tests across 16 suites covering types, settings persistence, API service (request building, response parsing, error handling), whitespace normalization, multi-provider integration, and UI view instantiation.
 
-## BYOK and settings
+## Create .app bundle
 
-- API keys are stored in the UI Settings panel (gear icon).
-- Keys can be used per-session or persisted in browser local storage.
-- OpenAI/Anthropic are only callable when the corresponding key is provided in Settings.
-- If Local is not available, the user can explicitly switch to OpenAI or Anthropic.
+```bash
+bash scripts/build-app.sh
+```
 
-## Environment variables
+The signed app bundle is written to `HumanizeBar.app` in the project root.
 
-- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
-- `OPENAI_MODEL`, `ANTHROPIC_MODEL` (defaults shown above)
-- `LOCAL_LLM_ENDPOINT` (defaults to `http://localhost:1234`)
-- `LOCAL_LLM_MODEL`
-- `LOCAL_LLM_API_FLAVOR` (`auto`, `openai`, `lmstudio`)
+## Configuration
 
-## Testing
+All settings are managed in-app via the settings panel:
 
-- Run all tests:
-  - `npm test`
-- Run focused suites:
-  - `npm run test:unit`
-  - `npm run test:integration`
+- **Provider** — OpenAI or Anthropic
+- **API Key** — stored in UserDefaults per provider
+- **Tone** — natural, casual, or professional
+- **Appearance** — system, light, or dark
 
-## Roadmap
+## Architecture
 
-- MacOS MenuBar App
-- NextJS WebApp
-- iOS App
-
-## Session handoff
-
-Last update was made in this repository at `12f406b`.
-
-When you resume:
-- Start server from `/Users/joemccann/dev/apps/util/humanize` with `npm run dev`.
-- Open `http://localhost:3000`.
-- Dev server on `3001` was previously stopped.
-- Provider behavior remains:
-  - local-first startup probing against `localhost:1234`,
-  - OpenAI/Anthropic require saved keys in Settings before use.
+```
+Sources/HumanizeBar/
+├── HumanizeBarApp.swift    # App entry point (menu bar only, no windows)
+├── AppDelegate.swift       # Status item + popover lifecycle
+├── PopoverView.swift       # Main UI: input, output, humanize button
+├── SettingsView.swift      # API key and preference management
+├── SettingsStore.swift     # @Observable persistence via UserDefaults
+├── HumanizeAPIService.swift # Provider request orchestration
+├── HTTPClient.swift        # Async networking layer
+├── SystemPrompt.swift      # Embedded rewrite prompt
+└── Types.swift             # Shared enums and models
+```

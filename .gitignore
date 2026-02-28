@@ -1,1 +1,5 @@
-node_modules/
+.build/
+.swiftpm/
+DerivedData/
+*.app
+.DS_Store
