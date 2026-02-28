@@ -583,18 +583,24 @@ struct PopoverView: View {
     }
 
     private func normalizeWhitespace(_ text: String) -> String {
-        text
-            .replacingOccurrences(of: "\r\n", with: "\n")
-            .replacingOccurrences(of: "\r", with: "\n")
-            .replacingOccurrences(of: "[\\t ]+", with: " ", options: .regularExpression)
-            .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
-            .replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
+        normalizeInputWhitespace(text)
     }
 
     private func copyToClipboard(_ text: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
     }
+}
+
+// MARK: - Testable helpers
+
+func normalizeInputWhitespace(_ text: String) -> String {
+    text
+        .replacingOccurrences(of: "\r\n", with: "\n")
+        .replacingOccurrences(of: "\r", with: "\n")
+        .replacingOccurrences(of: "[\\t ]+", with: " ", options: .regularExpression)
+        .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
+        .replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
 }
 
 // MARK: - NSTextView inset helper

@@ -81,4 +81,94 @@ struct SettingsStoreTests {
         store.openaiAPIKey = ""
         #expect(store.currentAPIKey == nil)
     }
+
+    @Test("Appearance persists across instances")
+    func appearancePersistence() {
+        let defaults = freshDefaults()
+        let store1 = SettingsStore(defaults: defaults)
+        store1.appearance = .dark
+        let store2 = SettingsStore(defaults: defaults)
+        #expect(store2.appearance == .dark)
+    }
+
+    @Test("Default appearance is system")
+    func defaultAppearance() {
+        let store = SettingsStore(defaults: freshDefaults())
+        #expect(store.appearance == .system)
+    }
+
+    @Test("All tones round-trip through persistence", arguments: HumanizeTone.allCases)
+    func tonePersistence(tone: HumanizeTone) {
+        let defaults = freshDefaults()
+        let store1 = SettingsStore(defaults: defaults)
+        store1.tone = tone
+        let store2 = SettingsStore(defaults: defaults)
+        #expect(store2.tone == tone)
+    }
+
+    @Test("All providers round-trip through persistence", arguments: AIProvider.allCases)
+    func providerPersistence(provider: AIProvider) {
+        let defaults = freshDefaults()
+        let store1 = SettingsStore(defaults: defaults)
+        store1.provider = provider
+        let store2 = SettingsStore(defaults: defaults)
+        #expect(store2.provider == provider)
+    }
+
+    @Test("All appearances round-trip through persistence", arguments: AppAppearance.allCases)
+    func allAppearancePersistence(appearance: AppAppearance) {
+        let defaults = freshDefaults()
+        let store1 = SettingsStore(defaults: defaults)
+        store1.appearance = appearance
+        let store2 = SettingsStore(defaults: defaults)
+        #expect(store2.appearance == appearance)
+    }
+
+    @Test("Corrupted tone in defaults falls back to .natural")
+    func corruptedTone() {
+        let defaults = freshDefaults()
+        defaults.set("invalid_tone", forKey: "humanize.tone")
+        let store = SettingsStore(defaults: defaults)
+        #expect(store.tone == .natural)
+    }
+
+    @Test("Corrupted provider in defaults falls back to .openai")
+    func corruptedProvider() {
+        let defaults = freshDefaults()
+        defaults.set("invalid_provider", forKey: "humanize.provider")
+        let store = SettingsStore(defaults: defaults)
+        #expect(store.provider == .openai)
+    }
+
+    @Test("Corrupted appearance in defaults falls back to .system")
+    func corruptedAppearance() {
+        let defaults = freshDefaults()
+        defaults.set("invalid_appearance", forKey: "humanize.appearance")
+        let store = SettingsStore(defaults: defaults)
+        #expect(store.appearance == .system)
+    }
+
+    @Test("Setting API key immediately updates hasRequiredAPIKey")
+    func immediateKeyUpdate() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.provider = .openai
+        #expect(store.hasRequiredAPIKey == false)
+        store.openaiAPIKey = "sk-new"
+        #expect(store.hasRequiredAPIKey == true)
+        store.openaiAPIKey = ""
+        #expect(store.hasRequiredAPIKey == false)
+    }
+
+    @Test("Both keys set — currentAPIKey returns the active provider's key")
+    func bothKeysSet() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.openaiAPIKey = "sk-open"
+        store.anthropicAPIKey = "ant-key"
+
+        store.provider = .openai
+        #expect(store.currentAPIKey == "sk-open")
+
+        store.provider = .anthropic
+        #expect(store.currentAPIKey == "ant-key")
+    }
 }
