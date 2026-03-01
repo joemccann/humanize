@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Create app bundle
+        run: |
+          APP_DIR="HumanizeBar.app"
+          rm -rf "$APP_DIR"
+          mkdir -p "${APP_DIR}/Contents/MacOS"
+          mkdir -p "${APP_DIR}/Contents/Resources"
+
+          cp ".build/release/HumanizeBar" "${APP_DIR}/Contents/MacOS/HumanizeBar"
+          cp "Info.plist" "${APP_DIR}/Contents/"
+          cp "Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+
+          codesign --force --sign - "$APP_DIR"
+
+      - name: Create DMG
+        run: bash scripts/create-dmg.sh HumanizeBar.app HumanizeBar.dmg
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: HumanizeBar.dmg
+          generate_release_notes: true
