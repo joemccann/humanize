@@ -1,5 +1,7 @@
 # Design Memory
 
+Current decision: Variant E (without the top-left mini bubble) is the approved production icon direction.
+
 ## Brand Tone
 - **Adjectives:** clear, friendly, trustworthy, editorial
 - **Avoid:** clutter near icon edges; tiny ornaments that muddy small-size legibility

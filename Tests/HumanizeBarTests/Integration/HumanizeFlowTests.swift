@@ -8,7 +8,7 @@ struct HumanizeFlowTests {
     func fullFlow() async throws {
         let client = MockHTTPClient { request in
             let url = request.url!.absoluteString
-            #expect(url == "https://api.openai.com/v1/chat/completions")
+            #expect(url == "https://api.cerebras.ai/v1/chat/completions")
 
             return mockResponse(json: [
                 "choices": [["message": ["content": "A naturally written sentence."]]]
@@ -19,13 +19,13 @@ struct HumanizeFlowTests {
         let result = try await service.humanize(
             text: "This is a very AI-sounding sentence that needs humanizing.",
             tone: .natural,
-            provider: .openai,
-            apiKey: "sk-test"
+            provider: .cerebras,
+            apiKey: "cbr-test"
         )
 
         #expect(result.text == "A naturally written sentence.")
-        #expect(result.provider == .openai)
-        #expect(result.model == "gpt-4o-mini")
+        #expect(result.provider == .cerebras)
+        #expect(result.model == "gpt-oss-120b")
     }
 
     @Test("Error flow: service throws on API error")
@@ -37,7 +37,7 @@ struct HumanizeFlowTests {
         let service = HumanizeAPIService(httpClient: client)
         do {
             _ = try await service.humanize(
-                text: "test", tone: .natural, provider: .openai, apiKey: "sk-test"
+                text: "test", tone: .natural, provider: .cerebras, apiKey: "cbr-test"
             )
             Issue.record("Expected error")
         } catch let error as HumanizeError {
@@ -49,14 +49,21 @@ struct HumanizeFlowTests {
         }
     }
 
-    @Test("Provider switching uses different endpoint")
+    @Test("Provider request builders map to provider-specific endpoints")
     func providerSwitching() async throws {
-        let request = HumanizeAPIService.buildRequest(
+        let cerebrasRequest = HumanizeAPIService.buildRequest(
+            provider: .cerebras,
+            apiKey: "cbr-test",
+            userMessage: "test"
+        )
+        #expect(cerebrasRequest.url?.absoluteString == "https://api.cerebras.ai/v1/chat/completions")
+
+        let anthropicRequest = HumanizeAPIService.buildRequest(
             provider: .anthropic,
             apiKey: "ant-test",
             userMessage: "test"
         )
-        #expect(request.url?.absoluteString == "https://api.anthropic.com/v1/messages")
+        #expect(anthropicRequest.url?.absoluteString == "https://api.anthropic.com/v1/messages")
 
         let client = MockHTTPClient { _ in
             mockResponse(json: [
@@ -76,11 +83,14 @@ struct HumanizeFlowTests {
         #expect(result.text == "Anthropic output")
     }
 
-    @Test("Different tones produce different request content")
+    @Test("Different tones produce unique request messages")
     func toneVariations() async throws {
+        var messages: Set<String> = []
         for tone in HumanizeTone.allCases {
             let message = HumanizeAPIService.buildUserMessage(text: "Hello", tone: tone)
             #expect(message.contains(tone.rawValue))
+            messages.insert(message)
         }
+        #expect(messages.count == HumanizeTone.allCases.count)
     }
 }

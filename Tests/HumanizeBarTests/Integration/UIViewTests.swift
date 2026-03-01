@@ -48,7 +48,7 @@ struct UIViewTests {
         #expect(view.frame.width >= 0)
     }
 
-    @Test("PopoverView with no API key instantiates in setup state")
+    @Test("PopoverView with no API key instantiates without crash")
     func popoverNoKeySetup() {
         let store = SettingsStore(defaults: freshDefaults())
         #expect(!store.hasRequiredAPIKey)
@@ -58,11 +58,11 @@ struct UIViewTests {
         #expect(controller.view.frame.width >= 0)
     }
 
-    @Test("PopoverView with API key instantiates in main state")
+    @Test("PopoverView with API key instantiates without crash")
     func popoverWithKey() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
-        store.openaiAPIKey = "sk-test"
+        store.provider = .cerebras
+        store.cerebrasAPIKey = "cbr-test"
         #expect(store.hasRequiredAPIKey)
         let controller = NSHostingController(
             rootView: PopoverView().environment(store)
@@ -103,7 +103,7 @@ struct UIViewTests {
         #expect(controller.view.frame.width >= 0)
     }
 
-    @Test("PopoverView with each provider renders correctly", arguments: AIProvider.allCases)
+    @Test("PopoverView instantiates across providers", arguments: AIProvider.allCases)
     func popoverPerProvider(provider: AIProvider) {
         let store = SettingsStore(defaults: freshDefaults())
         store.provider = provider
@@ -113,7 +113,7 @@ struct UIViewTests {
         #expect(controller.view.frame.width >= 0)
     }
 
-    @Test("SettingsView with each provider renders correctly", arguments: AIProvider.allCases)
+    @Test("SettingsView instantiates across providers", arguments: AIProvider.allCases)
     func settingsPerProvider(provider: AIProvider) {
         let store = SettingsStore(defaults: freshDefaults())
         store.provider = provider
@@ -136,7 +136,8 @@ struct AppDelegateTests {
     @Test("AppDelegate settingsStore has default values")
     func defaultSettings() {
         let delegate = AppDelegate()
-        #expect(delegate.settingsStore.provider == .openai)
+        #expect(delegate.settingsStore.provider == .cerebras)
+        #expect(delegate.settingsStore.cerebrasAPIKey == "")
         #expect(delegate.settingsStore.openaiAPIKey == "")
         #expect(delegate.settingsStore.anthropicAPIKey == "")
         #expect(delegate.settingsStore.appearance == .system)

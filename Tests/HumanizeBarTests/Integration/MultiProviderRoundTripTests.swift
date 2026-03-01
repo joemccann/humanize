@@ -4,6 +4,42 @@ import Foundation
 
 @Suite("Multi-Provider Round Trip")
 struct MultiProviderRoundTripTests {
+    @Test("Same text, all tones, Cerebras - each produces valid result")
+    func allTonesCerebras() async throws {
+        let client = MockHTTPClient { request in
+            let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+            let messages = body["messages"] as! [[String: Any]]
+            let userContent = messages[1]["content"] as! String
+
+            let tone: String
+            if userContent.contains("\"natural\"") {
+                tone = "natural"
+            } else if userContent.contains("\"casual\"") {
+                tone = "casual"
+            } else {
+                tone = "professional"
+            }
+
+            return mockResponse(json: [
+                "choices": [["message": ["content": "Rewritten in \(tone) tone"]]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+
+        for tone in HumanizeTone.allCases {
+            let result = try await service.humanize(
+                text: "This is AI-generated text.",
+                tone: tone,
+                provider: .cerebras,
+                apiKey: "cbr-test"
+            )
+            #expect(result.text.contains(tone.rawValue))
+            #expect(result.provider == .cerebras)
+            #expect(result.latencyMs >= 0)
+        }
+    }
+
     @Test("Same text, all tones, OpenAI — each produces valid result")
     func allTonesOpenAI() async throws {
         let client = MockHTTPClient { request in
@@ -108,6 +144,19 @@ struct MultiProviderRoundTripTests {
 
     @Test("Request captures correct API key per provider")
     func apiKeyPerProvider() async throws {
+        // Verify Cerebras auth header
+        let cerebrasClient = MockHTTPClient { request in
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer cbr-specific")
+            return mockResponse(json: [
+                "choices": [["message": ["content": "ok"]]]
+            ])
+        }
+
+        let cerebrasService = HumanizeAPIService(httpClient: cerebrasClient)
+        _ = try await cerebrasService.humanize(
+            text: "test", tone: .natural, provider: .cerebras, apiKey: "cbr-specific"
+        )
+
         // Verify OpenAI auth header
         let openaiClient = MockHTTPClient { request in
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-specific")

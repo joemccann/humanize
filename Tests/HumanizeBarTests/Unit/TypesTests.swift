@@ -40,23 +40,43 @@ struct HumanizeToneTests {
 
 @Suite("AIProvider")
 struct AIProviderTests {
-    @Test("allCases contains exactly 2 providers")
+    @Test("allCases contains exactly 3 providers")
     func allCases() {
-        #expect(AIProvider.allCases.count == 2)
+        #expect(AIProvider.allCases.count == 3)
+        #expect(AIProvider.allCases.contains(.cerebras))
         #expect(AIProvider.allCases.contains(.openai))
         #expect(AIProvider.allCases.contains(.anthropic))
     }
 
     @Test("displayName returns human-readable name")
     func displayNames() {
+        #expect(AIProvider.cerebras.displayName == "Cerebras")
         #expect(AIProvider.openai.displayName == "OpenAI")
         #expect(AIProvider.anthropic.displayName == "Anthropic")
     }
 
     @Test("defaultModel returns expected model IDs")
     func defaultModels() {
+        #expect(AIProvider.cerebras.defaultModel == "gpt-oss-120b")
         #expect(AIProvider.openai.defaultModel == "gpt-4o-mini")
-        #expect(AIProvider.anthropic.defaultModel == "claude-3-haiku-20240307")
+        #expect(!AIProvider.anthropic.defaultModel.isEmpty)
+    }
+
+    @Test("recommended order starts with Cerebras")
+    func recommendedOrder() {
+        #expect(AIProvider.recommendedOrder == [.cerebras, .openai, .anthropic])
+    }
+
+    @Test("fallbackProviders preserves recommended order excluding self", arguments: AIProvider.allCases)
+    func fallbackProviders(provider: AIProvider) {
+        let expected = AIProvider.recommendedOrder.filter { $0 != provider }
+        #expect(provider.fallbackProviders == expected)
+    }
+
+    @Test("recommended order includes all providers exactly once")
+    func recommendedOrderCompleteness() {
+        #expect(AIProvider.recommendedOrder.count == AIProvider.allCases.count)
+        #expect(Set(AIProvider.recommendedOrder) == Set(AIProvider.allCases))
     }
 
     @Test("Round-trips through rawValue", arguments: AIProvider.allCases)
@@ -163,17 +183,17 @@ struct HumanizeErrorTests {
 struct HumanizeResultTests {
     @Test("Stores all fields correctly")
     func fields() {
-        let result = HumanizeResult(text: "output", provider: .openai, model: "gpt-4o-mini", latencyMs: 150)
+        let result = HumanizeResult(text: "output", provider: .cerebras, model: "gpt-oss-120b", latencyMs: 150)
         #expect(result.text == "output")
-        #expect(result.provider == .openai)
-        #expect(result.model == "gpt-4o-mini")
+        #expect(result.provider == .cerebras)
+        #expect(result.model == "gpt-oss-120b")
         #expect(result.latencyMs == 150)
     }
 
     @Test("Anthropic result fields")
     func anthropicResult() {
-        let result = HumanizeResult(text: "rewritten", provider: .anthropic, model: "claude-3-haiku-20240307", latencyMs: 300)
+        let result = HumanizeResult(text: "rewritten", provider: .anthropic, model: AIProvider.anthropic.defaultModel, latencyMs: 300)
         #expect(result.provider == .anthropic)
-        #expect(result.model == "claude-3-haiku-20240307")
+        #expect(result.model == AIProvider.anthropic.defaultModel)
     }
 }

@@ -2,11 +2,14 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(SettingsStore.self) private var settings
+    @State private var showCerebrasKey = false
     @State private var showOpenAIKey = false
     @State private var showAnthropicKey = false
 
     var body: some View {
         @Bindable var s = settings
+        let selectableProviders = s.selectableProviders
+        let providerOptions = selectableProviders.isEmpty ? AIProvider.allCases : selectableProviders
 
         VStack(spacing: 0) {
             // Header
@@ -39,9 +42,16 @@ struct SettingsView: View {
                     }
 
                     Picker("Provider", selection: $s.provider) {
-                        ForEach(AIProvider.allCases, id: \.self) { provider in
+                        ForEach(providerOptions, id: \.self) { provider in
                             Text(provider.displayName).tag(provider)
                         }
+                    }
+                    .disabled(selectableProviders.isEmpty)
+
+                    if selectableProviders.isEmpty {
+                        Text("Add an API key to enable provider selection.")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
                     }
                 } header: {
                     Text("General")
@@ -51,6 +61,25 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    HStack(spacing: 6) {
+                        if showCerebrasKey {
+                            TextField("Paste Cerebras API key", text: $s.cerebrasAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 12, design: .monospaced))
+                        } else {
+                            SecureField("Paste Cerebras API key", text: $s.cerebrasAPIKey)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 12))
+                        }
+                        Button(action: { showCerebrasKey.toggle() }) {
+                            Image(systemName: showCerebrasKey ? "eye.slash" : "eye")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        statusDot(for: s.cerebrasAPIKey)
+                    }
+
                     HStack(spacing: 6) {
                         if showOpenAIKey {
                             TextField("sk-...", text: $s.openaiAPIKey)
@@ -109,7 +138,7 @@ struct SettingsView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
                                 .font(.system(size: 12))
-                            Text("Add a \(settings.provider.displayName) API key")
+                            Text("Add at least one API key (Cerebras recommended)")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
                         }

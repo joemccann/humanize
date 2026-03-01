@@ -6,7 +6,8 @@ A native macOS menu bar app that rewrites AI-generated text into natural, human-
 
 - Lives in the macOS menu bar — always one click away
 - Paste-in, humanize, copy-out workflow
-- BYOK: bring your own OpenAI or Anthropic API key
+- BYOK: bring your own Cerebras, OpenAI, or Anthropic API key
+- Recommended default: Cerebras with automatic backup attempts to OpenAI and Anthropic
 - Tone selection: natural, casual, professional
 - Light, dark, and system appearance modes
 - Built with SwiftUI, no Electron, no web views
@@ -15,7 +16,7 @@ A native macOS menu bar app that rewrites AI-generated text into natural, human-
 
 - macOS 14 (Sonoma) or later
 - Swift 6.0+
-- An OpenAI or Anthropic API key
+- At least one API key (Cerebras recommended)
 
 ## Build
 
@@ -29,7 +30,7 @@ swift build
 swift test
 ```
 
-120 tests across 17 suites covering types, settings persistence, API service (request building, response parsing, error handling), whitespace normalization, multi-provider integration, and UI view instantiation.
+145 tests across 17 suites covering types, settings persistence, API service (request building, response parsing, error handling), fallback behavior, whitespace normalization, multi-provider integration, and UI view instantiation.
 
 ## Generate app icon assets
 
@@ -85,8 +86,9 @@ bash scripts/publish-app.sh \
 
 All settings are managed in-app via the settings panel:
 
-- **Provider** — OpenAI or Anthropic
-- **API Key** — stored in UserDefaults per provider
+- **Provider** — Cerebras (recommended), OpenAI, or Anthropic
+- **API Keys** — stored in UserDefaults per provider
+- **Fallback order** — selected provider first, then remaining providers in recommended order
 - **Tone** — natural, casual, or professional
 - **Appearance** — system, light, or dark
 
@@ -104,3 +106,13 @@ Sources/HumanizeBar/
 ├── SystemPrompt.swift      # Embedded rewrite prompt
 └── Types.swift             # Shared enums and models
 ```
+
+Operational scripts:
+
+- `scripts/generate-app-icons.sh` — build `.iconset`/`.icns` from source PNG
+- `scripts/build-app.sh` — local signed app bundle build
+- `scripts/publish-app.sh` — production package/sign/notarize/install flow
+
+## License
+
+MIT

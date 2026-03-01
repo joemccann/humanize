@@ -12,11 +12,19 @@ enum HumanizeTone: String, CaseIterable, Sendable, Codable {
 // MARK: - Provider
 
 enum AIProvider: String, CaseIterable, Sendable, Codable {
+    case cerebras
     case openai
     case anthropic
 
+    static let recommendedOrder: [AIProvider] = [.cerebras, .openai, .anthropic]
+
+    var fallbackProviders: [AIProvider] {
+        Self.recommendedOrder.filter { $0 != self }
+    }
+
     var displayName: String {
         switch self {
+        case .cerebras: "Cerebras"
         case .openai: "OpenAI"
         case .anthropic: "Anthropic"
         }
@@ -24,6 +32,7 @@ enum AIProvider: String, CaseIterable, Sendable, Codable {
 
     var defaultModel: String {
         switch self {
+        case .cerebras: "gpt-oss-120b"
         case .openai: "gpt-4o-mini"
         case .anthropic: "claude-3-haiku-20240307"
         }

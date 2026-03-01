@@ -12,6 +12,37 @@ struct SettingsServiceIntegrationTests {
         return defaults
     }
 
+    @Test("Cerebras flow: configure settings -> build request -> mock call -> parse response")
+    func cerebrasEndToEnd() async throws {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.provider = .cerebras
+        store.cerebrasAPIKey = "cbr-integration"
+        store.tone = .professional
+
+        #expect(store.hasRequiredAPIKey)
+        let apiKey = store.currentAPIKey!
+
+        let client = MockHTTPClient { request in
+            #expect(request.url?.host == "api.cerebras.ai")
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer cbr-integration")
+
+            return mockResponse(json: [
+                "choices": [["message": ["content": "Professional rewrite"]]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        let result = try await service.humanize(
+            text: "AI text to rewrite",
+            tone: store.tone,
+            provider: store.provider,
+            apiKey: apiKey
+        )
+
+        #expect(result.text == "Professional rewrite")
+        #expect(result.provider == .cerebras)
+    }
+
     @Test("OpenAI flow: configure settings → build request → mock call → parse response")
     func openaiEndToEnd() async throws {
         let store = SettingsStore(defaults: freshDefaults())
@@ -142,11 +173,27 @@ struct SettingsServiceIntegrationTests {
         #expect(result.text == "Persisted result")
     }
 
-    @Test("Missing API key prevents humanize call")
+    @Test("Primary provider without key falls back to next configured provider")
+    func fallbackProviderSelection() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.provider = .cerebras
+        store.cerebrasAPIKey = ""
+        store.openaiAPIKey = "sk-backup"
+        store.anthropicAPIKey = ""
+
+        #expect(store.hasRequiredAPIKey)
+        #expect(store.provider == .openai)
+        #expect(store.currentProviderForRequest == .openai)
+        #expect(store.currentAPIKey == "sk-backup")
+    }
+
+    @Test("Missing API key keeps store in not-ready state")
     func missingKeyGuard() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
+        store.provider = .cerebras
+        store.cerebrasAPIKey = ""
         store.openaiAPIKey = ""
+        store.anthropicAPIKey = ""
 
         #expect(!store.hasRequiredAPIKey)
         #expect(store.currentAPIKey == nil)

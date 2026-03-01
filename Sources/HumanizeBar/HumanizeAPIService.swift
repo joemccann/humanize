@@ -54,11 +54,36 @@ struct HumanizeAPIService: Sendable {
 
     static func buildRequest(provider: AIProvider, apiKey: String, userMessage: String) -> URLRequest {
         switch provider {
+        case .cerebras:
+            return buildCerebrasRequest(apiKey: apiKey, userMessage: userMessage)
         case .openai:
             return buildOpenAIRequest(apiKey: apiKey, userMessage: userMessage)
         case .anthropic:
             return buildAnthropicRequest(apiKey: apiKey, userMessage: userMessage)
         }
+    }
+
+    // MARK: - Cerebras
+
+    private static func buildCerebrasRequest(apiKey: String, userMessage: String) -> URLRequest {
+        var request = URLRequest(url: URL(string: "https://api.cerebras.ai/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "model": AIProvider.cerebras.defaultModel,
+            "stream": false,
+            "messages": [
+                ["role": "system", "content": humanizeSystemPrompt],
+                ["role": "user", "content": userMessage],
+            ],
+            "temperature": 0.3,
+            "top_p": 1,
+            "max_completion_tokens": 1024,
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        return request
     }
 
     // MARK: - OpenAI
@@ -113,6 +138,11 @@ struct HumanizeAPIService: Sendable {
         let text: String?
 
         switch provider {
+        case .cerebras:
+            let choices = json["choices"] as? [[String: Any]]
+            let message = choices?.first?["message"] as? [String: Any]
+            text = message?["content"] as? String
+
         case .openai:
             let choices = json["choices"] as? [[String: Any]]
             let message = choices?.first?["message"] as? [String: Any]
@@ -120,11 +150,8 @@ struct HumanizeAPIService: Sendable {
 
         case .anthropic:
             let content = json["content"] as? [[String: Any]]
-            if let first = content?.first, first["type"] as? String == "text" {
-                text = first["text"] as? String
-            } else {
-                text = nil
-            }
+            let firstTextBlock = content?.first { $0["type"] as? String == "text" }
+            text = firstTextBlock?["text"] as? String
         }
 
         guard let result = text?.trimmingCharacters(in: .whitespacesAndNewlines), !result.isEmpty else {

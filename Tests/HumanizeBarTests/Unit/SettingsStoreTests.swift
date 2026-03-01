@@ -16,7 +16,8 @@ struct SettingsStoreTests {
     func defaults() {
         let store = SettingsStore(defaults: freshDefaults())
         #expect(store.tone == .natural)
-        #expect(store.provider == .openai)
+        #expect(store.provider == .cerebras)
+        #expect(store.cerebrasAPIKey == "")
         #expect(store.openaiAPIKey == "")
         #expect(store.anthropicAPIKey == "")
     }
@@ -26,13 +27,15 @@ struct SettingsStoreTests {
         let defaults = freshDefaults()
         let store1 = SettingsStore(defaults: defaults)
         store1.tone = .professional
-        store1.provider = .anthropic
+        store1.cerebrasAPIKey = "cbr-test"
         store1.openaiAPIKey = "sk-test"
         store1.anthropicAPIKey = "ant-test"
+        store1.provider = .anthropic
 
         let store2 = SettingsStore(defaults: defaults)
         #expect(store2.tone == .professional)
         #expect(store2.provider == .anthropic)
+        #expect(store2.cerebrasAPIKey == "cbr-test")
         #expect(store2.openaiAPIKey == "sk-test")
         #expect(store2.anthropicAPIKey == "ant-test")
     }
@@ -40,38 +43,61 @@ struct SettingsStoreTests {
     @Test("hasRequiredAPIKey is true when selected provider key is set")
     func hasRequiredKeyTrue() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
-        store.openaiAPIKey = "sk-key"
+        store.provider = .cerebras
+        store.cerebrasAPIKey = "cbr-key"
         #expect(store.hasRequiredAPIKey == true)
     }
 
-    @Test("hasRequiredAPIKey is false when selected provider key is empty")
+    @Test("hasRequiredAPIKey is false when no provider keys are set")
     func hasRequiredKeyFalse() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
+        store.provider = .cerebras
+        store.cerebrasAPIKey = ""
         store.openaiAPIKey = ""
+        store.anthropicAPIKey = ""
         #expect(store.hasRequiredAPIKey == false)
     }
 
-    @Test("hasRequiredAPIKey checks the correct provider")
-    func hasRequiredKeyWrongProvider() {
+    @Test("hasRequiredAPIKey is true when backup provider key is set")
+    func hasRequiredKeyFromBackupProvider() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
+        store.provider = .cerebras
+        store.cerebrasAPIKey = ""
         store.anthropicAPIKey = "ant-key"
-        store.openaiAPIKey = ""
-        #expect(store.hasRequiredAPIKey == false)
+        #expect(store.provider == .anthropic)
+        #expect(store.hasRequiredAPIKey == true)
+        #expect(store.currentProviderForRequest == .anthropic)
     }
 
-    @Test("currentAPIKey returns key for selected provider")
+    @Test("currentAPIKey returns selected provider key when present")
     func currentAPIKey() {
         let store = SettingsStore(defaults: freshDefaults())
         store.provider = .anthropic
         store.anthropicAPIKey = "ant-key"
+        store.cerebrasAPIKey = "cbr-key"
         store.openaiAPIKey = "sk-key"
         #expect(store.currentAPIKey == "ant-key")
+        #expect(store.currentProviderForRequest == .anthropic)
 
-        store.provider = .openai
+        store.provider = .cerebras
+        #expect(store.currentAPIKey == "cbr-key")
+        #expect(store.currentProviderForRequest == .cerebras)
+    }
+
+    @Test("currentAPIKey falls back to next configured provider")
+    func currentAPIKeyFallback() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.provider = .cerebras
+        store.cerebrasAPIKey = ""
+        store.openaiAPIKey = "sk-key"
+        store.anthropicAPIKey = "ant-key"
+
+        #expect(store.currentProviderForRequest == .openai)
         #expect(store.currentAPIKey == "sk-key")
+
+        store.openaiAPIKey = ""
+        #expect(store.currentProviderForRequest == .anthropic)
+        #expect(store.currentAPIKey == "ant-key")
     }
 
     @Test("currentAPIKey returns nil when key is empty")
@@ -132,12 +158,12 @@ struct SettingsStoreTests {
         #expect(store.tone == .natural)
     }
 
-    @Test("Corrupted provider in defaults falls back to .openai")
+    @Test("Corrupted provider in defaults falls back to .cerebras")
     func corruptedProvider() {
         let defaults = freshDefaults()
         defaults.set("invalid_provider", forKey: "humanize.provider")
         let store = SettingsStore(defaults: defaults)
-        #expect(store.provider == .openai)
+        #expect(store.provider == .cerebras)
     }
 
     @Test("Corrupted appearance in defaults falls back to .system")
@@ -151,24 +177,107 @@ struct SettingsStoreTests {
     @Test("Setting API key immediately updates hasRequiredAPIKey")
     func immediateKeyUpdate() {
         let store = SettingsStore(defaults: freshDefaults())
-        store.provider = .openai
+        store.provider = .cerebras
         #expect(store.hasRequiredAPIKey == false)
-        store.openaiAPIKey = "sk-new"
+        store.cerebrasAPIKey = "cbr-new"
         #expect(store.hasRequiredAPIKey == true)
-        store.openaiAPIKey = ""
+        store.cerebrasAPIKey = ""
         #expect(store.hasRequiredAPIKey == false)
     }
 
-    @Test("Both keys set — currentAPIKey returns the active provider's key")
+    @Test("All keys set - currentAPIKey returns the active provider's key")
     func bothKeysSet() {
         let store = SettingsStore(defaults: freshDefaults())
+        store.cerebrasAPIKey = "cbr-key"
         store.openaiAPIKey = "sk-open"
         store.anthropicAPIKey = "ant-key"
+
+        store.provider = .cerebras
+        #expect(store.currentAPIKey == "cbr-key")
 
         store.provider = .openai
         #expect(store.currentAPIKey == "sk-open")
 
         store.provider = .anthropic
         #expect(store.currentAPIKey == "ant-key")
+    }
+
+    @Test("providerAttemptOrder starts with selected provider")
+    func providerAttemptOrder() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.provider = .openai
+        #expect(store.providerAttemptOrder == [.openai, .cerebras, .anthropic])
+    }
+
+    @Test("providerAttemptOrder follows selected provider then fallbackProviders", arguments: AIProvider.allCases)
+    func providerAttemptOrderAllProviders(provider: AIProvider) {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.cerebrasAPIKey = "cbr-key"
+        store.openaiAPIKey = "sk-key"
+        store.anthropicAPIKey = "ant-key"
+        store.provider = provider
+
+        let expected = [provider] + provider.fallbackProviders
+        #expect(store.providerAttemptOrder == expected)
+    }
+
+    @Test("selectableProviders follows recommended order of configured keys")
+    func selectableProvidersOrder() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.cerebrasAPIKey = ""
+        store.openaiAPIKey = "sk-key"
+        store.anthropicAPIKey = "ant-key"
+
+        #expect(store.selectableProviders == [.openai, .anthropic])
+
+        store.cerebrasAPIKey = "cbr-key"
+        #expect(store.selectableProviders == [.cerebras, .openai, .anthropic])
+    }
+
+    @Test("Provider cannot remain selected without API key when another provider has a key")
+    func providerSelectionRequiresKey() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.openaiAPIKey = "sk-key"
+        store.cerebrasAPIKey = ""
+        store.anthropicAPIKey = ""
+        store.provider = .cerebras
+
+        #expect(store.provider == .openai)
+        #expect(store.hasAPIKey(for: store.provider))
+    }
+
+    @Test("apiKey(for:) returns nil for empty and value for configured providers")
+    func apiKeyForProvider() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.cerebrasAPIKey = ""
+        store.openaiAPIKey = "sk-key"
+        store.anthropicAPIKey = ""
+
+        #expect(store.apiKey(for: .cerebras) == nil)
+        #expect(store.apiKey(for: .openai) == "sk-key")
+        #expect(store.apiKey(for: .anthropic) == nil)
+    }
+
+    @Test("Whitespace-only API keys are treated as missing")
+    func whitespaceOnlyKeys() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.cerebrasAPIKey = "   "
+        store.openaiAPIKey = "\n\t"
+        store.anthropicAPIKey = "  \n  "
+
+        #expect(store.apiKey(for: .cerebras) == nil)
+        #expect(store.apiKey(for: .openai) == nil)
+        #expect(store.apiKey(for: .anthropic) == nil)
+        #expect(store.selectableProviders.isEmpty)
+        #expect(store.hasRequiredAPIKey == false)
+    }
+
+    @Test("API keys are trimmed before use")
+    func trimmedKeys() {
+        let store = SettingsStore(defaults: freshDefaults())
+        store.openaiAPIKey = "  sk-key  \n"
+
+        #expect(store.apiKey(for: .openai) == "sk-key")
+        #expect(store.currentProviderForRequest == .openai)
     }
 }

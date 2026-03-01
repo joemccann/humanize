@@ -182,7 +182,7 @@ struct PopoverView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
 
-                Text("Add your \(settings.provider.displayName) API key in Settings to get started.")
+                Text("Add at least one API key to get started. Cerebras is recommended by default.")
                     .font(.system(size: 13))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
@@ -258,7 +258,9 @@ struct PopoverView: View {
                 settingsSection("Provider") {
                     HStack(spacing: 4) {
                         ForEach(AIProvider.allCases, id: \.self) { provider in
+                            let isSelectable = s.hasAPIKey(for: provider)
                             Button {
+                                guard isSelectable else { return }
                                 s.provider = provider
                             } label: {
                                 Text(provider.displayName)
@@ -276,7 +278,15 @@ struct PopoverView: View {
                                     )
                             }
                             .buttonStyle(.plain)
+                            .disabled(!isSelectable)
+                            .opacity(isSelectable ? 1 : 0.45)
                         }
+                    }
+
+                    if s.selectableProviders.isEmpty {
+                        Text("Add an API key to enable provider selection.")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Theme.textTertiary)
                     }
                 }
 
@@ -307,6 +317,14 @@ struct PopoverView: View {
                 }
 
                 // API Keys
+                settingsSection("Cerebras API Key") {
+                    apiKeyField(
+                        value: $s.cerebrasAPIKey,
+                        placeholder: "Paste Cerebras API key",
+                        isEmpty: s.cerebrasAPIKey.isEmpty
+                    )
+                }
+
                 settingsSection("OpenAI API Key") {
                     apiKeyField(
                         value: $s.openaiAPIKey,
@@ -336,7 +354,7 @@ struct PopoverView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                             .font(.system(size: 11))
-                        Text("Add a \(settings.provider.displayName) API key")
+                        Text("Add at least one API key (Cerebras recommended)")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Theme.textSecondary)
                     }
@@ -555,28 +573,48 @@ struct PopoverView: View {
     }
 
     private func humanize() {
-        guard settings.hasRequiredAPIKey, let apiKey = settings.currentAPIKey else {
+        guard settings.hasRequiredAPIKey else {
             statusMessage = "Error: No API key. Open Settings to add one."
             return
         }
+
+        let input = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let attemptOrder = settings.providerAttemptOrder
 
         isProcessing = true
         statusMessage = ""
         outputText = ""
 
         Task {
+            var lastError: Error?
+
             do {
-                let result = try await service.humanize(
-                    text: inputText.trimmingCharacters(in: .whitespacesAndNewlines),
-                    tone: settings.tone,
-                    provider: settings.provider,
-                    apiKey: apiKey
-                )
-                outputText = result.text
-                copyToClipboard(result.text)
-                statusMessage = "Done in \(formatLatencySeconds(result.latencyMs)) — copied to clipboard"
-            } catch {
-                statusMessage = "Error: \(error.localizedDescription)"
+                for provider in attemptOrder {
+                    guard let apiKey = settings.apiKey(for: provider) else { continue }
+
+                    do {
+                        let result = try await service.humanize(
+                            text: input,
+                            tone: settings.tone,
+                            provider: provider,
+                            apiKey: apiKey
+                        )
+
+                        outputText = result.text
+                        copyToClipboard(result.text)
+                        statusMessage = "Done via \(result.provider.displayName) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard"
+                        isProcessing = false
+                        return
+                    } catch {
+                        lastError = error
+                    }
+                }
+
+                if let lastError {
+                    statusMessage = "Error: \(lastError.localizedDescription)"
+                } else {
+                    statusMessage = "Error: No API key. Open Settings to add one."
+                }
             }
             isProcessing = false
         }

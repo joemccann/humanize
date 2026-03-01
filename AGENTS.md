@@ -2,7 +2,7 @@
 
 ## Project context
 
-`humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via OpenAI or Anthropic APIs.
+`humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs (with provider fallback support).
 
 ## Tech stack
 
@@ -22,7 +22,7 @@
 ## Validation policy
 
 - `swift build` must compile with zero errors and zero warnings.
-- `swift test` must pass (116 tests, 16 suites) before any merge.
+- `swift test` must pass (145 tests, 17 suites) before any merge.
 - `bash scripts/build-app.sh` must produce a signed `.app` bundle.
 
 ## Process
@@ -43,5 +43,8 @@
 | `Sources/HumanizeBar/HumanizeAPIService.swift` | API request orchestration |
 | `Sources/HumanizeBar/SettingsStore.swift` | Persisted user preferences |
 | `Sources/HumanizeBar/SystemPrompt.swift` | Embedded rewrite prompt |
+| `Resources/AppIcon-1024.png` | Source-of-truth app icon artwork |
+| `scripts/generate-app-icons.sh` | Generate `AppIcon.iconset` + `AppIcon.icns` from source PNG |
+| `scripts/publish-app.sh` | Production packaging (sign, notarize, install to `/Applications`) |
 | `docs/system-prompt-lite.md` | Reference copy of the lite prompt |
 | `docs/lessons.md` | Cross-session lessons learned |

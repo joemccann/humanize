@@ -1,5 +1,7 @@
 # Design Implementation Plan: Humanize App Icon
 
+Status: implemented and promoted to production assets.
+
 ## Summary
 - **Scope:** component (application icon)
 - **Target:** `Resources/AppIcon-1024.png` and derived macOS icon assets

@@ -4,6 +4,29 @@ import Foundation
 
 @Suite("Request Builder")
 struct RequestBuilderTests {
+    @Test("Cerebras body matches expected structure")
+    func cerebrasBodyStructure() {
+        let request = HumanizeAPIService.buildRequest(
+            provider: .cerebras,
+            apiKey: "cbr-test",
+            userMessage: "test message"
+        )
+
+        let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+        #expect(body.keys.contains("model"))
+        #expect(body.keys.contains("messages"))
+        #expect(body.keys.contains("stream"))
+        #expect(body.keys.contains("temperature"))
+        #expect(body.keys.contains("top_p"))
+        #expect(body.keys.contains("max_completion_tokens"))
+
+        let messages = body["messages"] as! [[String: Any]]
+        #expect(messages[0]["role"] as? String == "system")
+        #expect(messages[0]["content"] as? String == humanizeSystemPrompt)
+        #expect(messages[1]["role"] as? String == "user")
+        #expect(messages[1]["content"] as? String == "test message")
+    }
+
     @Test("OpenAI body matches expected structure")
     func openaiBodyStructure() {
         let request = HumanizeAPIService.buildRequest(
@@ -48,6 +71,13 @@ struct RequestBuilderTests {
 
     @Test("System prompt is included in requests")
     func systemPromptIncluded() {
+        let cerebrasReq = HumanizeAPIService.buildRequest(
+            provider: .cerebras, apiKey: "key", userMessage: "msg"
+        )
+        let cerebrasBody = try! JSONSerialization.jsonObject(with: cerebrasReq.httpBody!) as! [String: Any]
+        let cerebrasMessages = cerebrasBody["messages"] as! [[String: Any]]
+        #expect(cerebrasMessages[0]["content"] as? String == humanizeSystemPrompt)
+
         let openaiReq = HumanizeAPIService.buildRequest(
             provider: .openai, apiKey: "key", userMessage: "msg"
         )
