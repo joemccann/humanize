@@ -2,14 +2,16 @@
 
 A native macOS menu bar app that rewrites AI-generated text into natural, human-sounding prose. Paste text, pick a tone, and get rewritten output copied to your clipboard.
 
+
+<p align="center">
+  <img src=".github/banner.png" alt="Cerebras provider" width="100%" />
+</p>
+
 **[Download the latest release (DMG)](https://github.com/joemccann/humanize/releases/latest/download/HumanizeBar.dmg)** — Open the DMG, drag to Applications, then run:
 
 ```bash
 xattr -cr /Applications/HumanizeBar.app
 ```
-<p align="center">
-  <img src=".github/banner.png" alt="Cerebras provider" width="100%" />
-</p>
 
 Bring your own key and select your provider. Cerebras is the default and recommended provider as it is the most affordable and provides the best results in fractions of a second.
 
