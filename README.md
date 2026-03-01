@@ -29,7 +29,19 @@ swift build
 swift test
 ```
 
-116 tests across 16 suites covering types, settings persistence, API service (request building, response parsing, error handling), whitespace normalization, multi-provider integration, and UI view instantiation.
+120 tests across 17 suites covering types, settings persistence, API service (request building, response parsing, error handling), whitespace normalization, multi-provider integration, and UI view instantiation.
+
+## Generate app icon assets
+
+```bash
+bash scripts/generate-app-icons.sh
+```
+
+This generates icon assets from `Resources/AppIcon-1024.png` (or pass `--source <path>`):
+
+- `Resources/AppIcon-1024.png`
+- `Resources/AppIcon.iconset/*`
+- `Resources/AppIcon.icns`
 
 ## Create .app bundle
 
@@ -37,7 +49,37 @@ swift test
 bash scripts/build-app.sh
 ```
 
-The signed app bundle is written to `HumanizeBar.app` in the project root.
+The signed app bundle is written to `HumanizeBar.app` in the project root and includes `AppIcon.icns`.
+
+## Publish for production
+
+`scripts/publish-app.sh` is the production packaging flow. It performs:
+
+- Release build
+- Developer ID signing (`codesign --options runtime --timestamp`)
+- Notarization + stapling (unless explicitly skipped)
+- Installation of the final app to `/Applications/HumanizeBar.app`
+
+### Required environment variables
+
+- `PUBLISH_SIGNING_IDENTITY` (Developer ID Application certificate)
+- `PUBLISH_NOTARY_PROFILE` (`xcrun notarytool` keychain profile)
+
+### Publish command
+
+```bash
+PUBLISH_SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+PUBLISH_NOTARY_PROFILE="AC_NOTARY_PROFILE" \
+bash scripts/publish-app.sh
+```
+
+### Optional: skip notarization (internal use only)
+
+```bash
+bash scripts/publish-app.sh \
+  --signing-identity "Developer ID Application: Your Name (TEAMID)" \
+  --skip-notarization
+```
 
 ## Configuration
 

@@ -14,10 +14,12 @@
   - Unit: Types, normalizeWhitespace, SettingsStore (persistence, corruption fallback), API service edge cases
   - Integration: settings→service flows, multi-provider round-trips, provider switching
   - UI: view instantiation, NSHostingController rendering, appearance modes, AppDelegate
+- [x] T10: Add production publish pipeline script (`scripts/publish-app.sh`) with release build, Developer ID signing, notarization/stapling, and install to `/Applications/HumanizeBar.app`
+- [x] T11: Add app icon pipeline (`scripts/generate-app-icons.sh`) and integrate `Resources/AppIcon.icns` into build/publish bundles
+- [x] T12: Finalize app icon direction (Variant E) and promote as production `Resources/AppIcon-1024.png` source art
 
 ## Up next
 
-- [ ] Code signing + notarization for distribution
 - [ ] Keyboard shortcut (global hotkey) to toggle popover
 - [ ] Sparkle or manual update mechanism
 - [ ] Clipboard watch mode (auto-detect paste, offer to humanize)
