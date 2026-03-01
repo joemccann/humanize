@@ -20,8 +20,8 @@
 - Aligned docs to current provider model: Cerebras, OpenAI, Anthropic.
 - Documented fallback behavior: selected provider first, then remaining providers in recommended order when keys are configured.
 - Confirmed production packaging docs for icon generation, app bundling, and publish pipeline.
-- Updated validation references to current baseline: `145 tests`, `17 suites`.
-- Verification complete: `swift build` and `swift test` passed (`145 tests`, `17 suites`, `0 failures`).
+- Updated validation references to current baseline: `152 tests`, `17 suites`.
+- Verification complete: `swift build` and `swift test` passed (`152 tests`, `17 suites`, `0 failures`).
 
 ### Change: Prevent selecting providers without configured API keys
 
@@ -45,7 +45,7 @@
 - Settings UIs now disable provider controls without keys and show helper text when no providers are selectable.
 - Validation passed:
   - `swift build`
-  - `swift test` (`145 tests`, `17 suites`, `0 failures`)
+  - `swift test` (`152 tests`, `17 suites`, `0 failures`)
 
 ### Change: Post-review hardening for key validation and parser robustness
 
@@ -69,7 +69,117 @@
 - Tightened integration test semantics/titles for clearer behavior contracts.
 - Validation passed:
   - `swift build`
-  - `swift test` (`145 tests`, `17 suites`, `0 failures`)
+  - `swift test` (`152 tests`, `17 suites`, `0 failures`)
+
+### Change: Document provider model mapping
+
+#### Dependency Graph
+
+- T11 -> T12
+- T12 -> T13
+
+#### Tasks
+
+- [x] T11: Add provider model mapping to `README.md` (`depends_on: []`)
+- [x] T12: Add provider model mapping to `AGENTS.md` (`depends_on: [T11]`)
+- [x] T13: Document completion in milestone tracker (`depends_on: [T12]`)
+
+#### Review
+
+- Added explicit provider → model mapping for Cerebras, OpenAI, and Anthropic.
+- Clarified source of truth as `AIProvider.defaultModel` in `Sources/HumanizeBar/Types.swift`.
+
+### Change: Fix runtime model selection for OpenAI/Anthropic and improve error UX
+
+#### Dependency Graph
+
+- T14 -> T15
+- T15 -> T16
+- T15 -> T17
+- T16 -> T17
+- T17 -> T18
+
+#### Tasks
+
+- [x] T14: Confirm currently available OpenAI and Anthropic models using configured API keys and select latest usable model targets (`depends_on: []`)
+- [x] T15: Implement robust runtime model resolution that tries newest available model first, then retries on model-not-found with compatibility fallback (`depends_on: [T14]`)
+- [x] T16: Standardize error messaging/presentation to concise Apple-style status banners without raw payload dumps (`depends_on: [T15]`)
+- [x] T17: Expand tests for model discovery/fallback and friendly API-error mapping (`depends_on: [T15, T16]`)
+- [x] T18: Verify with `swift build` and `swift test`, then address any regressions (`depends_on: [T17]`)
+
+#### Review
+
+- Live model verification against configured keys:
+  - OpenAI: selected `gpt-5.2-chat-latest`
+  - Anthropic: selected `claude-sonnet-4-6`
+- Runtime model resolution now:
+  - fetches model catalogs (`/v1/models`) for OpenAI/Anthropic
+  - chooses newest valid provider model
+  - retries with compatibility fallback on model-availability failures.
+- Error UX is now consistent and user-facing (no raw JSON payload dump in status output).
+- Regression coverage added for Anthropic model fallback when provider error omits explicit error code.
+- Verification complete: `swift build` and `swift test` passed (`152 tests`, `17 suites`, `0 failures`).
+
+### Change: Enable popover resizing from lower-right corner
+
+#### Dependency Graph
+
+- T19 -> T20
+- T20 -> T21
+- T21 -> T22
+
+#### Tasks
+
+- [x] T19: Add shared popover size constants and clamped resize logic in app delegate (`depends_on: []`)
+- [x] T20: Add bottom-right resize grip with drag gesture/cursor affordance in popover UI (`depends_on: [T19]`)
+- [x] T21: Remove fixed-width hard lock so popover can resize while preserving minimum bounds (`depends_on: [T20]`)
+- [x] T22: Verify build/tests and relaunch app bundle (`depends_on: [T21]`)
+
+#### Review
+
+- Added `PopoverSizing` constants for default/min/max popover dimensions.
+- Implemented `AppDelegate` resize callback plumbing so drag translation updates `NSPopover.contentSize` with min/max clamps.
+- Added bottom-right resize handle to `PopoverView` and kept default size unchanged.
+- Verification complete:
+  - `swift build`
+  - `swift test` (`152 tests`, `17 suites`, `0 failures`)
+  - `bash scripts/build-app.sh`
+  - `open /Users/joemccann/dev/apps/util/humanize/HumanizeBar.app`
+
+### Change: Resolve OpenAI unsupported temperature errors on GPT-5 models
+
+#### Dependency Graph
+
+- T23 -> T24
+- T24 -> T25
+- T25 -> T26
+
+#### Tasks
+
+- [x] T23: Add failing regression tests proving OpenAI payload should not include unsupported `temperature` for current models (`depends_on: []`)
+- [x] T24: Run tests to confirm red state before implementation (`depends_on: [T23]`)
+- [x] T25: Implement request-builder fix and align payload assertions (`depends_on: [T24]`)
+- [x] T26: Re-run build/test and relaunch app bundle for manual validation (`depends_on: [T25]`)
+
+#### Review
+
+- Added regression tests first and confirmed they failed before code changes.
+- Removed `temperature` from OpenAI chat-completions payload for current GPT-5 model family compatibility.
+- Updated request payload tests to enforce that OpenAI requests omit unsupported `temperature`.
+- Verification complete:
+  - `swift build`
+  - `swift test` (`152 tests`, `17 suites`, `0 failures`)
+
+### Change: Remove visible lower-right resize indicator
+
+#### Dependency Graph
+
+- T27 -> T28
+
+#### Tasks
+
+- [x] T27: Remove visible corner resize glyph while preserving lower-right drag target and cursor behavior (`depends_on: []`)
+- [x] T28: Verify with `swift build` and `swift test` (`depends_on: [T27]`)
 
 ## Completed
 
@@ -81,7 +191,7 @@
 - [x] T6: Add local model adapter wiring + quality/perf checks
 - [x] T7: Build native macOS menu bar app (SwiftUI, BYOK, tone selection, appearance modes)
 - [x] T8: Refactor repo to macOS-only — remove Node.js/TS web app, promote macos/ to root
-- [x] T9: Expand test suite and coverage baseline (now 145 tests across 17 suites)
+- [x] T9: Expand test suite and coverage baseline (now 152 tests across 17 suites)
   - Unit: Types, normalizeWhitespace, SettingsStore (persistence, corruption fallback), API service edge cases
   - Integration: settings→service flows, multi-provider round-trips, provider switching
   - UI: view instantiation, NSHostingController rendering, appearance modes, AppDelegate

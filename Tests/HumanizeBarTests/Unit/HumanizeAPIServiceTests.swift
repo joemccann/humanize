@@ -72,15 +72,29 @@ struct HumanizeAPIServiceTests {
         #expect(request.value(forHTTPHeaderField: "anthropic-version") == nil)
 
         let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
-        #expect(body["model"] as? String == "gpt-4o-mini")
-        #expect(body["temperature"] as? Double == 0.3)
-        #expect(body["max_tokens"] as? Int == 1024)
+        #expect(body["model"] as? String == AIProvider.openai.defaultModel)
+        #expect(body["max_completion_tokens"] as? Int == 1024)
+        #expect(body["max_tokens"] == nil)
+        #expect(body["temperature"] == nil)
 
         let messages = body["messages"] as! [[String: Any]]
         #expect(messages.count == 2)
         #expect(messages[0]["role"] as? String == "system")
         #expect(messages[1]["role"] as? String == "user")
         #expect((messages[1]["content"] as? String)?.contains("Hello world") == true)
+    }
+
+    @Test("OpenAI GPT-5 request omits unsupported temperature parameter")
+    func openAIGPT5OmitsTemperature() {
+        let request = HumanizeAPIService.buildRequest(
+            provider: .openai,
+            apiKey: "sk-test",
+            userMessage: "Rewrite this text:\n\nHello world",
+            model: "gpt-5.2-chat-latest"
+        )
+
+        let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+        #expect(body["temperature"] == nil)
     }
 
     // MARK: - Anthropic request format
@@ -108,6 +122,31 @@ struct HumanizeAPIServiceTests {
         let messages = body["messages"] as! [[String: Any]]
         #expect(messages.count == 1)
         #expect(messages[0]["role"] as? String == "user")
+    }
+
+    @Test("Selects latest compatible OpenAI model from model list")
+    func selectLatestOpenAIModel() {
+        let models: [[String: Any]] = [
+            ["id": "gpt-realtime-1.5", "created": 1000],
+            ["id": "gpt-5.2-chat-latest", "created": 3000],
+            ["id": "gpt-5.3-codex", "created": 4000],
+            ["id": "gpt-4o-mini", "created": 2000],
+        ]
+
+        let selected = HumanizeAPIService.selectLatestOpenAIModel(models: models)
+        #expect(selected == "gpt-5.2-chat-latest")
+    }
+
+    @Test("Selects latest Anthropic model from model list")
+    func selectLatestAnthropicModel() {
+        let models: [[String: Any]] = [
+            ["id": "claude-opus-4-6", "created_at": "2026-02-04T00:00:00Z"],
+            ["id": "claude-sonnet-4-6", "created_at": "2026-02-17T00:00:00Z"],
+            ["id": "claude-3-haiku-20240307", "created_at": "2024-03-07T00:00:00Z"],
+        ]
+
+        let selected = HumanizeAPIService.selectLatestAnthropicModel(models: models)
+        #expect(selected == "claude-sonnet-4-6")
     }
 
     // MARK: - Response parsing
@@ -221,8 +260,137 @@ struct HumanizeAPIServiceTests {
 
         #expect(result.text == "Natural sounding text")
         #expect(result.provider == .openai)
-        #expect(result.model == "gpt-4o-mini")
+        #expect(result.model == AIProvider.openai.defaultModel)
         #expect(result.latencyMs >= 0)
+    }
+
+    @Test("OpenAI falls back to compatibility model when selected model is unavailable")
+    func openAIModelFallback() async throws {
+        let client = MockHTTPClient { request in
+            let path = request.url?.path ?? ""
+
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": AIProvider.openai.defaultModel, "created": 3000],
+                        ["id": "gpt-4o-mini", "created": 2000],
+                    ]
+                ])
+            }
+
+            let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+            let model = body["model"] as! String
+
+            if model == AIProvider.openai.defaultModel {
+                return mockResponse(json: [
+                    "error": [
+                        "message": "The model does not exist or you do not have access to it.",
+                        "type": "invalid_request_error",
+                        "code": "model_not_found",
+                    ]
+                ], statusCode: 404)
+            }
+
+            #expect(model == "gpt-4o-mini")
+            return mockResponse(json: [
+                "choices": [["message": ["content": "Fallback model result"]]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        let result = try await service.humanize(
+            text: "AI sounding text",
+            tone: .natural,
+            provider: .openai,
+            apiKey: "sk-test"
+        )
+
+        #expect(result.provider == .openai)
+        #expect(result.model == "gpt-4o-mini")
+        #expect(result.text == "Fallback model result")
+    }
+
+    @Test("Anthropic falls back when model-not-found has no explicit error code")
+    func anthropicModelFallbackWithoutErrorCode() async throws {
+        let client = MockHTTPClient { request in
+            let path = request.url?.path ?? ""
+
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": AIProvider.anthropic.defaultModel, "created_at": "2026-02-17T00:00:00Z"],
+                        ["id": "claude-3-haiku-20240307", "created_at": "2024-03-07T00:00:00Z"],
+                    ]
+                ])
+            }
+
+            let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+            let model = body["model"] as! String
+
+            if model == AIProvider.anthropic.defaultModel {
+                return mockResponse(json: [
+                    "error": [
+                        "message": "The model '\(AIProvider.anthropic.defaultModel)' does not exist or is unavailable.",
+                    ],
+                ], statusCode: 404)
+            }
+
+            #expect(model == "claude-3-haiku-20240307")
+            return mockResponse(json: [
+                "content": [["type": "text", "text": "Anthropic fallback result"]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        let result = try await service.humanize(
+            text: "AI sounding text",
+            tone: .natural,
+            provider: .anthropic,
+            apiKey: "ant-fallback-test"
+        )
+
+        #expect(result.provider == .anthropic)
+        #expect(result.model == "claude-3-haiku-20240307")
+        #expect(result.text == "Anthropic fallback result")
+    }
+
+    @Test("API error messages are human-friendly, not raw payloads")
+    func apiErrorMessageIsFriendly() async throws {
+        let client = MockHTTPClient { request in
+            let path = request.url?.path ?? ""
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "claude-sonnet-4-6", "created_at": "2026-02-17T00:00:00Z"]]
+                ])
+            }
+
+            return mockResponse(json: [
+                "type": "error",
+                "error": [
+                    "type": "not_found_error",
+                    "message": "The model 'claude-x' does not exist.",
+                ],
+            ], statusCode: 404)
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        do {
+            _ = try await service.humanize(
+                text: "test",
+                tone: .natural,
+                provider: .anthropic,
+                apiKey: "ant-test"
+            )
+            Issue.record("Expected HumanizeError.apiError")
+        } catch let error as HumanizeError {
+            if case .apiError(let status, let message) = error {
+                #expect(status == 404)
+                #expect(!message.contains("{"))
+                #expect(message.contains("model"))
+            } else {
+                Issue.record("Expected apiError, got \(error)")
+            }
+        }
     }
 
     @Test("Successful Cerebras humanize call")
@@ -424,7 +592,7 @@ struct HumanizeAPIServiceTests {
         }
     }
 
-    @Test("HTTP 500 returns apiError with body")
+    @Test("HTTP 500 returns friendly availability error")
     func http500Error() async throws {
         let client = MockHTTPClient { _ in
             mockResponse(json: ["error": "internal server error"], statusCode: 500)
@@ -439,7 +607,7 @@ struct HumanizeAPIServiceTests {
         } catch let error as HumanizeError {
             if case .apiError(let status, let message) = error {
                 #expect(status == 500)
-                #expect(message.contains("internal server error"))
+                #expect(message == "Anthropic is temporarily unavailable. Please try again.")
             } else {
                 Issue.record("Expected apiError, got \(error)")
             }

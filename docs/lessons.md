@@ -20,6 +20,12 @@
 - Keep response parsing per provider explicit and normalize into one shared `HumanizeResult` shape.
 - Fallback behavior should be deterministic and easy to reason about: selected provider first, then remaining providers in recommended order when keys exist.
 - API keys should be trimmed before readiness/selection checks so whitespace-only values are treated as missing.
+- For provider model updates, verify live model catalogs (`/v1/models`) with the active API key before finalizing defaults.
+- UI status surfaces should map provider failures to concise human-friendly messages rather than raw payload dumps.
+- OpenAI GPT-5 chat-completions payloads should use `max_completion_tokens`; `max_tokens` can be rejected as an unsupported parameter.
+- For resizable popovers, avoid fixed-width SwiftUI frames and route drag-handle deltas to clamped `NSPopover.contentSize` updates in AppKit.
+- OpenAI GPT-5 chat payloads should omit `temperature` when only default temperature is supported; enforce this with regression tests.
+- For popover resize UX in tight layouts, prefer an invisible corner drag target plus cursor change when explicit visual grabber marks are undesired.
 
 ## Testing
 

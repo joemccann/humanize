@@ -38,14 +38,28 @@ struct RequestBuilderTests {
         let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
         #expect(body.keys.contains("model"))
         #expect(body.keys.contains("messages"))
-        #expect(body.keys.contains("temperature"))
-        #expect(body.keys.contains("max_tokens"))
+        #expect(body.keys.contains("max_completion_tokens"))
+        #expect(!body.keys.contains("max_tokens"))
+        #expect(!body.keys.contains("temperature"))
 
         let messages = body["messages"] as! [[String: Any]]
         #expect(messages[0]["role"] as? String == "system")
         #expect(messages[0]["content"] as? String == humanizeSystemPrompt)
         #expect(messages[1]["role"] as? String == "user")
         #expect(messages[1]["content"] as? String == "test message")
+    }
+
+    @Test("OpenAI GPT-5 request body excludes unsupported temperature")
+    func openaiGPT5BodyExcludesTemperature() {
+        let request = HumanizeAPIService.buildRequest(
+            provider: .openai,
+            apiKey: "sk-test",
+            userMessage: "test message",
+            model: "gpt-5.2-chat-latest"
+        )
+
+        let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+        #expect(!body.keys.contains("temperature"))
     }
 
     @Test("Anthropic body matches expected structure")

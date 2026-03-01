@@ -206,19 +206,23 @@ struct SettingsStoreTests {
     func providerAttemptOrder() {
         let store = SettingsStore(defaults: freshDefaults())
         store.provider = .openai
-        #expect(store.providerAttemptOrder == [.openai, .cerebras, .anthropic])
+        #expect(store.providerAttemptOrder == [.openai])
     }
 
-    @Test("providerAttemptOrder follows selected provider then fallbackProviders", arguments: AIProvider.allCases)
-    func providerAttemptOrderAllProviders(provider: AIProvider) {
+    @Test("providerAttemptOrder uses Cerebras fallback chain and strict backup providers")
+    func providerAttemptOrderByProvider() {
         let store = SettingsStore(defaults: freshDefaults())
         store.cerebrasAPIKey = "cbr-key"
         store.openaiAPIKey = "sk-key"
         store.anthropicAPIKey = "ant-key"
-        store.provider = provider
+        store.provider = .cerebras
+        #expect(store.providerAttemptOrder == [.cerebras, .openai, .anthropic])
 
-        let expected = [provider] + provider.fallbackProviders
-        #expect(store.providerAttemptOrder == expected)
+        store.provider = .openai
+        #expect(store.providerAttemptOrder == [.openai])
+
+        store.provider = .anthropic
+        #expect(store.providerAttemptOrder == [.anthropic])
     }
 
     @Test("selectableProviders follows recommended order of configured keys")

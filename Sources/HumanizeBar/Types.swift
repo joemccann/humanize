@@ -33,8 +33,8 @@ enum AIProvider: String, CaseIterable, Sendable, Codable {
     var defaultModel: String {
         switch self {
         case .cerebras: "gpt-oss-120b"
-        case .openai: "gpt-4o-mini"
-        case .anthropic: "claude-3-haiku-20240307"
+        case .openai: "gpt-5.2-chat-latest"
+        case .anthropic: "claude-sonnet-4-6"
         }
     }
 }

@@ -58,8 +58,8 @@ struct AIProviderTests {
     @Test("defaultModel returns expected model IDs")
     func defaultModels() {
         #expect(AIProvider.cerebras.defaultModel == "gpt-oss-120b")
-        #expect(AIProvider.openai.defaultModel == "gpt-4o-mini")
-        #expect(!AIProvider.anthropic.defaultModel.isEmpty)
+        #expect(AIProvider.openai.defaultModel == "gpt-5.2-chat-latest")
+        #expect(AIProvider.anthropic.defaultModel == "claude-sonnet-4-6")
     }
 
     @Test("recommended order starts with Cerebras")

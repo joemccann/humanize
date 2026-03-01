@@ -63,7 +63,12 @@ final class SettingsStore {
     }
 
     var providerAttemptOrder: [AIProvider] {
-        [provider] + provider.fallbackProviders
+        switch provider {
+        case .cerebras:
+            [provider] + provider.fallbackProviders
+        case .openai, .anthropic:
+            [provider]
+        }
     }
 
     var selectableProviders: [AIProvider] {

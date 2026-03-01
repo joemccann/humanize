@@ -81,14 +81,26 @@ private enum Theme {
 // MARK: - Popover
 
 struct PopoverView: View {
+    private enum StatusKind {
+        case success
+        case error
+    }
+
     @Environment(SettingsStore.self) private var settings
     @State private var inputText = ""
     @State private var outputText = ""
     @State private var statusMessage = ""
+    @State private var statusKind: StatusKind = .success
     @State private var isProcessing = false
     @State private var showSettings = false
 
+    let onResize: ((CGSize, Bool) -> Void)?
+
     private let service = HumanizeAPIService()
+
+    init(onResize: ((CGSize, Bool) -> Void)? = nil) {
+        self.onResize = onResize
+    }
 
     var body: some View {
         ZStack {
@@ -112,7 +124,14 @@ struct PopoverView: View {
             }
             .padding(16)
         }
-        .frame(minWidth: 420, maxWidth: 420, minHeight: 340)
+        .overlay(alignment: .bottomTrailing) {
+            if let onResize {
+                PopoverResizeHandle(onResize: onResize)
+                    .padding(.trailing, 8)
+                    .padding(.bottom, 8)
+            }
+        }
+        .frame(minWidth: PopoverSizing.minSize.width, minHeight: PopoverSizing.minSize.height)
         .preferredColorScheme(settings.appearance.resolvedColorScheme)
     }
 
@@ -521,7 +540,7 @@ struct PopoverView: View {
                 Button {
                     inputText = ""
                     outputText = ""
-                    statusMessage = ""
+                    clearStatus()
                 } label: {
                     Label("Clear", systemImage: "xmark")
                         .font(.system(size: 11, weight: .semibold))
@@ -542,26 +561,23 @@ struct PopoverView: View {
 
         // Status badge
         if !statusMessage.isEmpty {
-            HStack(spacing: 4) {
-                if statusMessage.contains("Error") {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.red)
-                } else {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.green)
-                }
+            HStack(spacing: 6) {
+                Image(systemName: statusKind == .error ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(statusKind == .error ? .red : .green)
                 Text(statusMessage)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(statusMessage.contains("Error") ? .red.opacity(0.8) : Theme.textSecondary)
+                    .foregroundStyle(statusKind == .error ? .red.opacity(0.85) : Theme.textSecondary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
-                Capsule()
-                    .fill(Theme.pillBg)
-                    .stroke(Theme.pillBorder, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(statusKind == .error ? Color.red.opacity(0.08) : Theme.pillBg)
+                    .stroke(statusKind == .error ? Color.red.opacity(0.22) : Theme.pillBorder, lineWidth: 1)
             )
         }
     }
@@ -574,7 +590,7 @@ struct PopoverView: View {
 
     private func humanize() {
         guard settings.hasRequiredAPIKey else {
-            statusMessage = "Error: No API key. Open Settings to add one."
+            setErrorStatus("Add at least one API key in Settings.")
             return
         }
 
@@ -582,7 +598,7 @@ struct PopoverView: View {
         let attemptOrder = settings.providerAttemptOrder
 
         isProcessing = true
-        statusMessage = ""
+        clearStatus()
         outputText = ""
 
         Task {
@@ -602,7 +618,7 @@ struct PopoverView: View {
 
                         outputText = result.text
                         copyToClipboard(result.text)
-                        statusMessage = "Done via \(result.provider.displayName) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard"
+                        setSuccessStatus("Done via \(result.provider.displayName) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard")
                         isProcessing = false
                         return
                     } catch {
@@ -611,9 +627,9 @@ struct PopoverView: View {
                 }
 
                 if let lastError {
-                    statusMessage = "Error: \(lastError.localizedDescription)"
+                    setErrorStatus(userFacingErrorMessage(for: lastError))
                 } else {
-                    statusMessage = "Error: No API key. Open Settings to add one."
+                    setErrorStatus("Add at least one API key in Settings.")
                 }
             }
             isProcessing = false
@@ -627,6 +643,107 @@ struct PopoverView: View {
     private func copyToClipboard(_ text: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func setSuccessStatus(_ message: String) {
+        statusKind = .success
+        statusMessage = message
+    }
+
+    private func setErrorStatus(_ message: String) {
+        statusKind = .error
+        statusMessage = message
+    }
+
+    private func clearStatus() {
+        statusKind = .success
+        statusMessage = ""
+    }
+
+    private func userFacingErrorMessage(for error: Error) -> String {
+        guard let humanizeError = error as? HumanizeError else {
+            return "Something went wrong. Please try again."
+        }
+
+        switch humanizeError {
+        case .noAPIKey:
+            return "Add at least one API key in Settings."
+        case .invalidResponse:
+            return "The service returned an unreadable response. Please try again."
+        case .networkError:
+            return "Couldn't connect to the provider. Check your internet connection and try again."
+        case .apiError(_, let message):
+            return message
+        }
+    }
+}
+
+private struct PopoverResizeHandle: View {
+    let onResize: (CGSize, Bool) -> Void
+    @State private var isHovering = false
+    @State private var isDragging = false
+
+    var body: some View {
+        Color.clear
+        .frame(width: 24, height: 24)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isHovering = hovering
+            setCursor()
+        }
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    isDragging = true
+                    setCursor()
+                    onResize(value.translation, false)
+                }
+                .onEnded { value in
+                    isDragging = false
+                    onResize(value.translation, true)
+                    setCursor()
+                }
+        )
+        .help("Drag to resize")
+    }
+
+    private func setCursor() {
+        if isHovering || isDragging {
+            NSCursor.humanizeDiagonalResize().set()
+        } else {
+            NSCursor.arrow.set()
+        }
+    }
+}
+
+private extension NSCursor {
+    @MainActor static func humanizeDiagonalResize() -> NSCursor {
+        let fallback = NSCursor.resizeLeftRight
+
+        guard let symbol = NSImage(
+            systemSymbolName: "arrow.up.left.and.arrow.down.right",
+            accessibilityDescription: "Resize"
+        ) else {
+            return fallback
+        }
+
+        guard let configured = symbol.withSymbolConfiguration(
+            NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        ) else {
+            return fallback
+        }
+
+        let image = NSImage(size: NSSize(width: 18, height: 18))
+        image.lockFocus()
+        configured.draw(
+            in: NSRect(x: 2, y: 2, width: 14, height: 14),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1
+        )
+        image.unlockFocus()
+
+        return NSCursor(image: image, hotSpot: NSPoint(x: 9, y: 9))
     }
 }
 

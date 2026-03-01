@@ -43,6 +43,12 @@ struct MultiProviderRoundTripTests {
     @Test("Same text, all tones, OpenAI — each produces valid result")
     func allTonesOpenAI() async throws {
         let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.openai.defaultModel, "created": 1765344352]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let userContent = messages[1]["content"] as! String
@@ -80,6 +86,12 @@ struct MultiProviderRoundTripTests {
     @Test("Same text, all tones, Anthropic — each produces valid result")
     func allTonesAnthropic() async throws {
         let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.anthropic.defaultModel, "created_at": "2026-02-17T00:00:00Z"]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let userContent = messages[0]["content"] as! String
@@ -115,16 +127,34 @@ struct MultiProviderRoundTripTests {
     @Test("Sequential calls to different providers return correct provider metadata")
     func sequentialProviderCalls() async throws {
         let client = MockHTTPClient { request in
-            let url = request.url!.absoluteString
-            if url.contains("openai") {
+            let host = request.url?.host ?? ""
+            let path = request.url?.path ?? ""
+
+            if host.contains("openai.com"), path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.openai.defaultModel, "created": 1765344352]]
+                ])
+            }
+
+            if host.contains("openai.com"), path == "/v1/chat/completions" {
                 return mockResponse(json: [
                     "choices": [["message": ["content": "OpenAI result"]]]
                 ])
-            } else {
+            }
+
+            if host.contains("anthropic.com"), path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.anthropic.defaultModel, "created_at": "2026-02-17T00:00:00Z"]]
+                ])
+            }
+
+            if host.contains("anthropic.com"), path == "/v1/messages" {
                 return mockResponse(json: [
                     "content": [["type": "text", "text": "Anthropic result"]]
                 ])
             }
+
+            fatalError("Unexpected request: \(request.url?.absoluteString ?? "nil")")
         }
 
         let service = HumanizeAPIService(httpClient: client)
@@ -160,6 +190,11 @@ struct MultiProviderRoundTripTests {
         // Verify OpenAI auth header
         let openaiClient = MockHTTPClient { request in
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-specific")
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.openai.defaultModel, "created": 1765344352]]
+                ])
+            }
             return mockResponse(json: [
                 "choices": [["message": ["content": "ok"]]]
             ])
@@ -173,6 +208,11 @@ struct MultiProviderRoundTripTests {
         // Verify Anthropic x-api-key header
         let anthropicClient = MockHTTPClient { request in
             #expect(request.value(forHTTPHeaderField: "x-api-key") == "ant-specific")
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.anthropic.defaultModel, "created_at": "2026-02-17T00:00:00Z"]]
+                ])
+            }
             return mockResponse(json: [
                 "content": [["type": "text", "text": "ok"]]
             ])
@@ -189,6 +229,12 @@ struct MultiProviderRoundTripTests {
         let largeText = String(repeating: "This is a sentence. ", count: 100)
 
         let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": AIProvider.openai.defaultModel, "created": 1765344352]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let userContent = messages[1]["content"] as! String

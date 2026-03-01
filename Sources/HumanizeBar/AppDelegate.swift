@@ -7,14 +7,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var popover: NSPopover?
     private var eventMonitor: Any?
     private var rightClickMenu: NSMenu?
+    private var resizeStartSize: NSSize?
     let settingsStore = SettingsStore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 400, height: 520)
+        popover.contentSize = PopoverSizing.defaultSize
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
-            rootView: PopoverView()
+            rootView: PopoverView(onResize: { [weak self] delta, ended in
+                self?.resizePopover(by: delta, ended: ended)
+            })
                 .environment(settingsStore)
         )
         self.popover = popover
@@ -77,5 +80,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quit() {
         NSApp.terminate(nil)
+    }
+
+    private func resizePopover(by translation: CGSize, ended: Bool) {
+        guard let popover else { return }
+
+        if resizeStartSize == nil {
+            resizeStartSize = popover.contentSize
+        }
+
+        guard let startSize = resizeStartSize else { return }
+
+        let width = clamp(
+            startSize.width + translation.width,
+            min: PopoverSizing.minSize.width,
+            max: PopoverSizing.maxSize.width
+        )
+        let height = clamp(
+            startSize.height + translation.height,
+            min: PopoverSizing.minSize.height,
+            max: PopoverSizing.maxSize.height
+        )
+
+        popover.contentSize = NSSize(width: width, height: height)
+
+        if ended {
+            resizeStartSize = nil
+        }
+    }
+
+    private func clamp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+        Swift.max(min, Swift.min(max, value))
     }
 }

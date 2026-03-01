@@ -30,7 +30,7 @@ swift build
 swift test
 ```
 
-145 tests across 17 suites covering types, settings persistence, API service (request building, response parsing, error handling), fallback behavior, whitespace normalization, multi-provider integration, and UI view instantiation.
+152 tests across 17 suites covering types, settings persistence, API service (request building, response parsing, error handling), fallback behavior, whitespace normalization, multi-provider integration, and UI view instantiation.
 
 ## Generate app icon assets
 
@@ -88,9 +88,19 @@ All settings are managed in-app via the settings panel:
 
 - **Provider** — Cerebras (recommended), OpenAI, or Anthropic
 - **API Keys** — stored in UserDefaults per provider
-- **Fallback order** — selected provider first, then remaining providers in recommended order
+- **Fallback behavior** — Cerebras selection retries OpenAI then Anthropic; OpenAI/Anthropic selections stay on the selected provider
 - **Tone** — natural, casual, or professional
 - **Appearance** — system, light, or dark
+
+### Provider Models
+
+Current default models by provider (source of truth: `AIProvider.defaultModel` in `Sources/HumanizeBar/Types.swift`):
+
+- **Cerebras** — `gpt-oss-120b`
+- **OpenAI** — `gpt-5.2-chat-latest`
+- **Anthropic** — `claude-sonnet-4-6`
+
+At request time, OpenAI and Anthropic model lists are queried with your API key and the newest compatible available model is selected automatically. If a selected model is unavailable, the app retries with a compatibility fallback model for that provider.
 
 ## Architecture
 

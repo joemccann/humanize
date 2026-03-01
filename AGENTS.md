@@ -4,6 +4,15 @@
 
 `humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs (with provider fallback support).
 
+Current provider models (from `AIProvider.defaultModel`):
+- Cerebras: `gpt-oss-120b`
+- OpenAI: `gpt-5.2-chat-latest`
+- Anthropic: `claude-sonnet-4-6`
+
+Runtime behavior:
+- OpenAI/Anthropic query provider model catalogs with the configured API key and use the newest compatible available model.
+- If a model is unavailable (`model_not_found`/`not_found_error`), request handling retries with a provider compatibility fallback.
+
 ## Tech stack
 
 - Swift 6.0, SwiftUI, Swift Package Manager
@@ -22,7 +31,7 @@
 ## Validation policy
 
 - `swift build` must compile with zero errors and zero warnings.
-- `swift test` must pass (145 tests, 17 suites) before any merge.
+- `swift test` must pass (152 tests, 17 suites) before any merge.
 - `bash scripts/build-app.sh` must produce a signed `.app` bundle.
 
 ## Process
