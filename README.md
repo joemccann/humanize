@@ -3,6 +3,12 @@
 A native macOS menu bar app that rewrites AI-generated text into natural, human-sounding prose. Paste text, pick a tone, and get rewritten output copied to your clipboard.
 
 <p align="center">
+  <img src=".github/banner.png" alt="Cerebras provider" width="100%" />
+</p>
+
+Bring your own key and select your provider. Cerebras is the default and recommended provider as it is the most affordable and provides the best results in fractions of a second.
+
+<p align="center">
   <img src=".github/cerebras.png" alt="Cerebras provider" width="270" />
   <img src=".github/openai.png" alt="OpenAI provider" width="270" />
   <img src=".github/anthropic.png" alt="Anthropic provider" width="270" />
