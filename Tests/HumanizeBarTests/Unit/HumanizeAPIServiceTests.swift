@@ -41,7 +41,7 @@ struct HumanizeAPIServiceTests {
         #expect(request.value(forHTTPHeaderField: "anthropic-version") == nil)
 
         let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
-        #expect(body["model"] as? String == "gpt-oss-120b")
+        #expect(body["model"] as? String == "zai-glm-4.7")
         #expect(body["stream"] as? Bool == false)
         #expect(body["temperature"] as? Double == 0.3)
         #expect(body["top_p"] as? Int == 1)
@@ -411,7 +411,7 @@ struct HumanizeAPIServiceTests {
 
         #expect(result.text == "Natural sounding text")
         #expect(result.provider == .cerebras)
-        #expect(result.model == "gpt-oss-120b")
+        #expect(result.model == "zai-glm-4.7")
         #expect(result.latencyMs >= 0)
     }
 
@@ -697,5 +697,47 @@ struct HumanizeAPIServiceTests {
             text: "test", tone: .natural, provider: .openai, apiKey: "sk-test"
         )
         #expect(result.latencyMs >= 0)
+    }
+
+    // MARK: - Cerebras model fallback
+
+    @Test("Cerebras model_not_found falls back to gpt-oss-120b")
+    func cerebrasModelFallback() async throws {
+        let modelsRequested = RequestedModels()
+        let client = MockHTTPClient { request in
+            let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+            let model = body["model"] as! String
+            await modelsRequested.append(model)
+
+            if model == "zai-glm-4.7" {
+                return mockResponse(json: [
+                    "error": ["message": "Model zai-glm-4.7 does not exist", "type": "not_found_error", "code": "model_not_found"]
+                ], statusCode: 404)
+            }
+
+            // gpt-oss-120b succeeds
+            return mockResponse(json: [
+                "choices": [["message": ["content": "Fallback result"]]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        let result = try await service.humanize(
+            text: "test", tone: .natural, provider: .cerebras, apiKey: "cbr-test"
+        )
+
+        #expect(result.text == "Fallback result")
+        #expect(result.provider == .cerebras)
+        #expect(result.model == "gpt-oss-120b")
+        let models = await modelsRequested.values
+        #expect(models == ["zai-glm-4.7", "gpt-oss-120b"])
+    }
+}
+
+private actor RequestedModels {
+    var values: [String] = []
+
+    func append(_ model: String) {
+        values.append(model)
     }
 }

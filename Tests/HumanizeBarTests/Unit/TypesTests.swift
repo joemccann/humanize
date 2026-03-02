@@ -57,7 +57,7 @@ struct AIProviderTests {
 
     @Test("defaultModel returns expected model IDs")
     func defaultModels() {
-        #expect(AIProvider.cerebras.defaultModel == "gpt-oss-120b")
+        #expect(AIProvider.cerebras.defaultModel == "zai-glm-4.7")
         #expect(AIProvider.openai.defaultModel == "gpt-5.2-chat-latest")
         #expect(AIProvider.anthropic.defaultModel == "claude-sonnet-4-6")
     }
@@ -65,12 +65,6 @@ struct AIProviderTests {
     @Test("recommended order starts with Cerebras")
     func recommendedOrder() {
         #expect(AIProvider.recommendedOrder == [.cerebras, .openai, .anthropic])
-    }
-
-    @Test("fallbackProviders preserves recommended order excluding self", arguments: AIProvider.allCases)
-    func fallbackProviders(provider: AIProvider) {
-        let expected = AIProvider.recommendedOrder.filter { $0 != provider }
-        #expect(provider.fallbackProviders == expected)
     }
 
     @Test("recommended order includes all providers exactly once")
@@ -183,10 +177,10 @@ struct HumanizeErrorTests {
 struct HumanizeResultTests {
     @Test("Stores all fields correctly")
     func fields() {
-        let result = HumanizeResult(text: "output", provider: .cerebras, model: "gpt-oss-120b", latencyMs: 150)
+        let result = HumanizeResult(text: "output", provider: .cerebras, model: "zai-glm-4.7", latencyMs: 150)
         #expect(result.text == "output")
         #expect(result.provider == .cerebras)
-        #expect(result.model == "gpt-oss-120b")
+        #expect(result.model == "zai-glm-4.7")
         #expect(result.latencyMs == 150)
     }
 

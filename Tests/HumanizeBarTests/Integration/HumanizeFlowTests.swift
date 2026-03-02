@@ -25,7 +25,7 @@ struct HumanizeFlowTests {
 
         #expect(result.text == "A naturally written sentence.")
         #expect(result.provider == .cerebras)
-        #expect(result.model == "gpt-oss-120b")
+        #expect(result.model == "zai-glm-4.7")
     }
 
     @Test("Error flow: service throws on API error")

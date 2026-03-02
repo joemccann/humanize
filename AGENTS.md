@@ -2,10 +2,10 @@
 
 ## Project context
 
-`humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs (with provider fallback support).
+`humanize` is a native macOS menu bar app (SwiftUI) that rewrites AI-generated text into natural, human-sounding prose. Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs. Cerebras falls back to `gpt-oss-120b` on model_not_found, then cross-provider to OpenAI/Anthropic. Other providers stay strict.
 
 Current provider models (from `AIProvider.defaultModel`):
-- Cerebras: `gpt-oss-120b`
+- Cerebras: `zai-glm-4.7` (fallback: `gpt-oss-120b`)
 - OpenAI: `gpt-5.2-chat-latest`
 - Anthropic: `claude-sonnet-4-6`
 

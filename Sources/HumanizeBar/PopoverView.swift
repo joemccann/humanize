@@ -618,7 +618,9 @@ struct PopoverView: View {
 
                         outputText = result.text
                         copyToClipboard(result.text)
-                        setSuccessStatus("Done via \(result.provider.displayName) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard")
+                        let isFallback = result.provider != settings.provider || result.model != result.provider.defaultModel
+                        let providerLabel = isFallback ? "\(result.provider.displayName) (\(result.model))" : result.provider.displayName
+                        setSuccessStatus("Done via \(providerLabel) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard")
                         isProcessing = false
                         return
                     } catch {

@@ -209,12 +209,13 @@ struct SettingsStoreTests {
         #expect(store.providerAttemptOrder == [.openai])
     }
 
-    @Test("providerAttemptOrder uses Cerebras fallback chain and strict backup providers")
+    @Test("providerAttemptOrder — Cerebras falls back cross-provider, others stay strict")
     func providerAttemptOrderByProvider() {
         let store = SettingsStore(defaults: freshDefaults())
         store.cerebrasAPIKey = "cbr-key"
         store.openaiAPIKey = "sk-key"
         store.anthropicAPIKey = "ant-key"
+
         store.provider = .cerebras
         #expect(store.providerAttemptOrder == [.cerebras, .openai, .anthropic])
 

@@ -107,7 +107,7 @@ All settings are managed in-app via the settings panel:
 
 - **Provider** — Cerebras (recommended), OpenAI, or Anthropic
 - **API Keys** — stored in UserDefaults per provider
-- **Fallback behavior** — Cerebras selection retries OpenAI then Anthropic; OpenAI/Anthropic selections stay on the selected provider
+- **Cerebras fallback** — tries `zai-glm-4.7`, then `gpt-oss-120b`, then OpenAI, then Anthropic; other providers stay strict
 - **Tone** — natural, casual, or professional
 - **Appearance** — system, light, or dark
 
@@ -115,7 +115,7 @@ All settings are managed in-app via the settings panel:
 
 Current default models by provider (source of truth: `AIProvider.defaultModel` in `Sources/HumanizeBar/Types.swift`):
 
-- **Cerebras** — `gpt-oss-120b`
+- **Cerebras** — `zai-glm-4.7` (fallback: `gpt-oss-120b`)
 - **OpenAI** — `gpt-5.2-chat-latest`
 - **Anthropic** — `claude-sonnet-4-6`
 

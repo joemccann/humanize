@@ -18,10 +18,6 @@ enum AIProvider: String, CaseIterable, Sendable, Codable {
 
     static let recommendedOrder: [AIProvider] = [.cerebras, .openai, .anthropic]
 
-    var fallbackProviders: [AIProvider] {
-        Self.recommendedOrder.filter { $0 != self }
-    }
-
     var displayName: String {
         switch self {
         case .cerebras: "Cerebras"
@@ -32,7 +28,7 @@ enum AIProvider: String, CaseIterable, Sendable, Codable {
 
     var defaultModel: String {
         switch self {
-        case .cerebras: "gpt-oss-120b"
+        case .cerebras: "zai-glm-4.7"
         case .openai: "gpt-5.2-chat-latest"
         case .anthropic: "claude-sonnet-4-6"
         }

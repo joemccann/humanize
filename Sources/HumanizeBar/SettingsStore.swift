@@ -65,7 +65,7 @@ final class SettingsStore {
     var providerAttemptOrder: [AIProvider] {
         switch provider {
         case .cerebras:
-            [provider] + provider.fallbackProviders
+            [provider] + AIProvider.recommendedOrder.filter { $0 != provider }
         case .openai, .anthropic:
             [provider]
         }

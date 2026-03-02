@@ -2,6 +2,7 @@ import Foundation
 
 struct HumanizeAPIService: Sendable {
     private let httpClient: HTTPClient
+    private static let cerebrasFallbackModel = "gpt-oss-120b"
     private static let openAIFallbackModel = "gpt-4o-mini"
     private static let anthropicFallbackModel = "claude-3-haiku-20240307"
     private static let modelCache = ModelCandidateCache()
@@ -210,7 +211,7 @@ struct HumanizeAPIService: Sendable {
 
         switch provider {
         case .cerebras:
-            break
+            models.append(Self.cerebrasFallbackModel)
         case .openai:
             if let latest = await fetchLatestOpenAIModel(apiKey: apiKey) {
                 models.insert(latest, at: 0)
@@ -391,7 +392,7 @@ struct HumanizeAPIService: Sendable {
     }
 
     private func shouldRetryWithNextModel(provider: AIProvider, status: Int, apiError: ParsedAPIError) -> Bool {
-        guard provider == .openai || provider == .anthropic else { return false }
+        guard provider == .cerebras || provider == .openai || provider == .anthropic else { return false }
         guard status == 400 || status == 404 else { return false }
         if apiError.modelAvailabilityIssue { return true }
 
