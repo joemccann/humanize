@@ -1,4 +1,5 @@
 import SwiftUI
+import HumanizeShared
 
 struct SettingsView: View {
     @Environment(SettingsStore.self) private var settings

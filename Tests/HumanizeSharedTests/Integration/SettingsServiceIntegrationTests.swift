@@ -1,6 +1,7 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
+@testable import HumanizeShared
+import HumanizeTestSupport
 
 @MainActor
 @Suite("Settings + Service Integration")

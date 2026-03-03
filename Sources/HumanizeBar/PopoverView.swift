@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import HumanizeShared
 
 // MARK: - Adaptive design tokens
 
@@ -89,6 +90,8 @@ struct PopoverView: View {
     @Environment(SettingsStore.self) private var settings
     @State private var inputText = ""
     @State private var outputText = ""
+    @State private var analysisText: String?
+    @State private var showAnalysis = false
     @State private var statusMessage = ""
     @State private var statusKind: StatusKind = .success
     @State private var isProcessing = false
@@ -537,9 +540,40 @@ struct PopoverView: View {
                 }
                 .buttonStyle(.plain)
 
+                if analysisText != nil {
+                    Button {
+                        showAnalysis.toggle()
+                    } label: {
+                        Label("Details", systemImage: "text.magnifyingglass")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Theme.sky700)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Theme.sky100)
+                                    .stroke(Theme.sky200, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showAnalysis) {
+                        ScrollView {
+                            Text(analysisText ?? "")
+                                .font(.system(size: 12))
+                                .lineSpacing(3)
+                                .foregroundStyle(Theme.textPrimary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(14)
+                        }
+                        .frame(width: 300, height: 200)
+                    }
+                }
+
                 Button {
                     inputText = ""
                     outputText = ""
+                    analysisText = nil
+                    showAnalysis = false
                     clearStatus()
                 } label: {
                     Label("Clear", systemImage: "xmark")
@@ -617,6 +651,7 @@ struct PopoverView: View {
                         )
 
                         outputText = result.text
+                        analysisText = result.analysis
                         copyToClipboard(result.text)
                         let isFallback = result.provider != settings.provider || result.model != result.provider.defaultModel
                         let providerLabel = isFallback ? "\(result.provider.displayName) (\(result.model))" : result.provider.displayName
@@ -747,40 +782,6 @@ private extension NSCursor {
 
         return NSCursor(image: image, hotSpot: NSPoint(x: 9, y: 9))
     }
-}
-
-// MARK: - Testable helpers
-
-func normalizeInputWhitespace(_ text: String) -> String {
-    text
-        .replacingOccurrences(of: "\r\n", with: "\n")
-        .replacingOccurrences(of: "\r", with: "\n")
-        .replacingOccurrences(of: "[\\t ]+", with: " ", options: .regularExpression)
-        .replacingOccurrences(of: " *\n *", with: "\n", options: .regularExpression)
-        .replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
-}
-
-func formatLatencySeconds(_ latencyMs: Int) -> String {
-    let clampedMs = max(0, latencyMs)
-    let wholeSeconds = clampedMs / 1000
-    let remainingMs = clampedMs % 1000
-
-    guard remainingMs != 0 else { return "\(wholeSeconds)s" }
-
-    let roundedHundredths = (remainingMs + 5) / 10
-    if roundedHundredths == 0 {
-        return "\(wholeSeconds)s"
-    }
-    if roundedHundredths == 100 {
-        return "\(wholeSeconds + 1)s"
-    }
-
-    let tenths = roundedHundredths / 10
-    let hundredths = roundedHundredths % 10
-    if hundredths == 0 {
-        return "\(wholeSeconds).\(tenths)s"
-    }
-    return "\(wholeSeconds).\(tenths)\(hundredths)s"
 }
 
 // MARK: - NSTextView inset helper

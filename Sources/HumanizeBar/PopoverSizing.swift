@@ -1,4 +1,5 @@
 import AppKit
+import HumanizeShared
 
 enum PopoverSizing {
     static let defaultSize = NSSize(width: 400, height: 520)

@@ -87,7 +87,7 @@
 #### Review
 
 - Added explicit provider → model mapping for Cerebras, OpenAI, and Anthropic.
-- Clarified source of truth as `AIProvider.defaultModel` in `Sources/HumanizeBar/Types.swift`.
+- Clarified source of truth as `AIProvider.defaultModel` in `Sources/HumanizeShared/Types.swift`.
 
 ### Change: Fix runtime model selection for OpenAI/Anthropic and improve error UX
 
@@ -200,8 +200,70 @@
 - [x] T12: Finalize app icon direction (Variant E) and promote as production `Resources/AppIcon-1024.png` source art
 - [x] T13: Add Cerebras as default provider with OpenAI/Anthropic fallback backup attempts
 
+### Change: Refactor to monorepo with iOS app
+
+#### Dependency Graph
+
+- T29 -> T30
+- T30 -> T31
+- T31 -> T32
+- T32 -> T33
+
+#### Tasks
+
+- [x] T29: Extract `HumanizeShared` cross-platform library from `HumanizeBar` (Types, AppAppearance, HTTPClient, SystemPrompt, HumanizeAPIService, SettingsStore, TextUtilities) (`depends_on: []`)
+- [x] T30: Reorganize tests into `HumanizeTestSupport`, `HumanizeSharedTests`, `HumanizeBarTests` (`depends_on: [T29]`)
+- [x] T31: Create iOS app (`HumanizeMobile`) with TDD — app entry, theme, HumanizeView, settings, clipboard, integration tests (`depends_on: [T30]`)
+- [x] T32: Generate Xcode project via xcodegen, verify iOS build + tests on simulator (`depends_on: [T31]`)
+- [x] T33: Update all docs, build scripts verification, .gitignore (`depends_on: [T32]`)
+
+#### Review
+
+- Extracted 7 platform-agnostic files into `Sources/HumanizeShared/` with `public` access control.
+- Split `Types.swift` into `Types.swift` + `AppAppearance.swift` (with `#if os(macOS)` for `resolvedColorScheme`).
+- Extracted `normalizeInputWhitespace` and `formatLatencySeconds` into `TextUtilities.swift`.
+- Created `Tests/HumanizeTestSupport/MockHTTPClient.swift` as shared test infrastructure.
+- Moved 11 test files from `HumanizeBarTests` to `HumanizeSharedTests` with updated imports.
+- Created 6 iOS source files: HumanizeMobileApp, ContentView, HumanizeView, MobileSettingsView, MobileTheme, Clipboard.
+- Created 6 iOS test files with 20 tests across 6 suites.
+- `MobileTheme` mirrors macOS `Theme` with identical RGB values using `UIColor` adaptive pattern.
+- Generated `HumanizeMobile.xcodeproj` via xcodegen from `project.yml`.
+- Verification passed:
+  - `swift build` — zero errors
+  - `swift test` — 152 tests, 17 suites, 0 failures
+  - `xcodebuild test` (HumanizeMobileTests, iPhone 17 Pro) — 20 tests, 6 suites, 0 failures
+  - `bash scripts/build-app.sh` — signed .app bundle produced
+  - Total: 172 tests across 23 suites
+
+## Completed
+
+- [x] T1: Finalize architecture, provider abstraction, and acceptance criteria
+- [x] T2: Add provider adapter interfaces and one provider implementation
+- [x] T3: Implement deterministic local rewrite pass for high-signal transformations
+- [x] T4: Build paste → transform → review/copy web workflow
+- [x] T5: Add tests (unit + integration + UI smoke)
+- [x] T6: Add local model adapter wiring + quality/perf checks
+- [x] T7: Build native macOS menu bar app (SwiftUI, BYOK, tone selection, appearance modes)
+- [x] T8: Refactor repo to macOS-only — remove Node.js/TS web app, promote macos/ to root
+- [x] T9: Expand test suite and coverage baseline (now 152 tests across 17 suites)
+  - Unit: Types, normalizeWhitespace, SettingsStore (persistence, corruption fallback), API service edge cases
+  - Integration: settings→service flows, multi-provider round-trips, provider switching
+  - UI: view instantiation, NSHostingController rendering, appearance modes, AppDelegate
+- [x] T10: Add production publish pipeline script (`scripts/publish-app.sh`) with release build, Developer ID signing, notarization/stapling, and install to `/Applications/HumanizeBar.app`
+- [x] T11: Add app icon pipeline (`scripts/generate-app-icons.sh`) and integrate `Resources/AppIcon.icns` into build/publish bundles
+- [x] T12: Finalize app icon direction (Variant E) and promote as production `Resources/AppIcon-1024.png` source art
+- [x] T13: Add Cerebras as default provider with OpenAI/Anthropic fallback backup attempts
+- [x] T14: Refactor to monorepo with HumanizeShared library + iOS app (172 tests, 23 suites)
+- [x] T15: Structured response parsing + "See Details" feature (204 tests, 25 suites)
+  - `parseHumanizeResponse` splits on `---` delimiter with heuristic fallback
+  - `HumanizeResult.analysis: String?` field, wired through `parseResponse`/`humanize()`
+  - iOS: Details button + analysis sheet, input maxHeight cap
+  - macOS: Details button + analysis popover
+  - System prompt updated with `---` output format
+
 ## Up next
 
 - [ ] Keyboard shortcut (global hotkey) to toggle popover
 - [ ] Sparkle or manual update mechanism
 - [ ] Clipboard watch mode (auto-detect paste, offer to humanize)
+- [ ] iOS App Store submission preparation (icons, screenshots, metadata)

@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
+@testable import HumanizeShared
 
 @Suite("Request Builder")
 struct RequestBuilderTests {

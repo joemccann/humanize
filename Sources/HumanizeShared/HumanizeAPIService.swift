@@ -1,17 +1,17 @@
 import Foundation
 
-struct HumanizeAPIService: Sendable {
+public struct HumanizeAPIService: Sendable {
     private let httpClient: HTTPClient
     private static let cerebrasFallbackModel = "gpt-oss-120b"
     private static let openAIFallbackModel = "gpt-4o-mini"
     private static let anthropicFallbackModel = "claude-3-haiku-20240307"
     private static let modelCache = ModelCandidateCache()
 
-    init(httpClient: HTTPClient = URLSession.shared) {
+    public init(httpClient: HTTPClient = URLSession.shared) {
         self.httpClient = httpClient
     }
 
-    func humanize(
+    public func humanize(
         text: String,
         tone: HumanizeTone,
         provider: AIProvider,
@@ -49,12 +49,13 @@ struct HumanizeAPIService: Sendable {
                 throw error
             }
 
-            let resultText = try Self.parseResponse(data: data, provider: provider)
+            let parsed = try Self.parseResponse(data: data, provider: provider)
             let elapsed = start.duration(to: .now)
             let latencyMs = Int(elapsed.components.seconds * 1000 + elapsed.components.attoseconds / 1_000_000_000_000_000)
 
             return HumanizeResult(
-                text: resultText,
+                text: parsed.text,
+                analysis: parsed.analysis,
                 provider: provider,
                 model: model,
                 latencyMs: latencyMs
@@ -66,7 +67,7 @@ struct HumanizeAPIService: Sendable {
 
     // MARK: - Request building
 
-    static func buildUserMessage(text: String, tone: HumanizeTone) -> String {
+    public static func buildUserMessage(text: String, tone: HumanizeTone) -> String {
         let options = """
         {
           "tone": "\(tone.rawValue)",
@@ -76,7 +77,7 @@ struct HumanizeAPIService: Sendable {
         return "Rewrite this text:\n\n\(text)\n\nOptions:\n\(options)"
     }
 
-    static func buildRequest(
+    public static func buildRequest(
         provider: AIProvider,
         apiKey: String,
         userMessage: String,
@@ -158,35 +159,35 @@ struct HumanizeAPIService: Sendable {
 
     // MARK: - Response parsing
 
-    static func parseResponse(data: Data, provider: AIProvider) throws -> String {
+    public static func parseResponse(data: Data, provider: AIProvider) throws -> (text: String, analysis: String?) {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw HumanizeError.invalidResponse
         }
 
-        let text: String?
+        let rawText: String?
 
         switch provider {
         case .cerebras:
             let choices = json["choices"] as? [[String: Any]]
             let message = choices?.first?["message"] as? [String: Any]
-            text = message?["content"] as? String
+            rawText = message?["content"] as? String
 
         case .openai:
             let choices = json["choices"] as? [[String: Any]]
             let message = choices?.first?["message"] as? [String: Any]
-            text = message?["content"] as? String
+            rawText = message?["content"] as? String
 
         case .anthropic:
             let content = json["content"] as? [[String: Any]]
             let firstTextBlock = content?.first { $0["type"] as? String == "text" }
-            text = firstTextBlock?["text"] as? String
+            rawText = firstTextBlock?["text"] as? String
         }
 
-        guard let result = text?.trimmingCharacters(in: .whitespacesAndNewlines), !result.isEmpty else {
+        guard let trimmed = rawText?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
             throw HumanizeError.invalidResponse
         }
 
-        return result
+        return parseHumanizeResponse(trimmed)
     }
 
     // MARK: - Private helpers
@@ -267,7 +268,7 @@ struct HumanizeAPIService: Sendable {
         return Self.selectLatestAnthropicModel(models: models)
     }
 
-    static func selectLatestOpenAIModel(models: [[String: Any]]) -> String? {
+    public static func selectLatestOpenAIModel(models: [[String: Any]]) -> String? {
         let disallowedTokens = ["audio", "realtime", "transcribe", "tts", "search", "image", "embedding", "codex"]
 
         let filtered = models.filter { model in
@@ -288,7 +289,7 @@ struct HumanizeAPIService: Sendable {
         return sorted.first?["id"] as? String
     }
 
-    static func selectLatestAnthropicModel(models: [[String: Any]]) -> String? {
+    public static func selectLatestAnthropicModel(models: [[String: Any]]) -> String? {
         let filtered = models.filter { model in
             guard let id = model["id"] as? String else { return false }
             return id.hasPrefix("claude-")

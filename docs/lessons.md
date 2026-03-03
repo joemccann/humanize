@@ -27,12 +27,23 @@
 - OpenAI GPT-5 chat payloads should omit `temperature` when only default temperature is supported; enforce this with regression tests.
 - For popover resize UX in tight layouts, prefer an invisible corner drag target plus cursor change when explicit visual grabber marks are undesired.
 
+## Monorepo / Cross-Platform
+
+- When extracting a shared library from a single-target app, add `public` to every type, property, method, and init that needs cross-module visibility. Memberwise inits on structs are not auto-synthesized as `public`; add explicit `public init(...)`.
+- Use `#if os(macOS)` / `#if os(iOS)` sparingly in shared code; prefer platform-specific files in each app target.
+- `@_exported import` re-exports a dependency's types, but `@testable` on the re-exporting module does not grant testable access to the re-exported module's internals. Add explicit `import` or `@testable import` for each module the tests need.
+- `UIPasteboard` is unreliable in iOS simulator unit tests (pasteboard UUID becomes unavailable). Test that clipboard functions execute without error rather than asserting read-back values.
+- For iOS theme parity with macOS, use `UIColor { traitCollection in }` adaptive pattern with identical RGB values. This is the UIKit equivalent of `NSColor(name:) { appearance in }`.
+- XcodeGen (`project.yml`) is effective for maintaining an Xcode project alongside a Package.swift monorepo. Regenerate with `xcodegen generate` after target/dependency changes.
+- SPM `swift test` only runs macOS test targets. iOS tests require `xcodebuild test` with a simulator destination.
+
 ## Testing
 
 - Swift Testing `@Test(arguments:)` with `CaseIterable` enums gives exhaustive coverage with minimal boilerplate.
 - Red/green testing: verify both the success path and the expected error type/payload.
 - Mock `HTTPClient` + structured `MockHTTPClient` data keeps provider/network tests deterministic without real HTTP calls.
 - Test corrupted/invalid `UserDefaults` values to confirm fallback defaults.
+- Extract shared test infrastructure (e.g., `MockHTTPClient`) into a non-test `.target` so multiple test targets can depend on it.
 
 ## Packaging / Release
 
@@ -45,3 +56,5 @@
 - Context management matters most for local models; lite prompts reduce truncation risk.
 - Explicit error mapping for 401/413/429/500/502 improves user trust versus generic failures.
 - System prompt embedded in code (`SystemPrompt.swift`) is simpler and more testable than runtime fetching.
+- When LLM responses mix rewritten text with analysis, use a simple delimiter (`---`) in the system prompt for reliable structured parsing; add heuristic fallbacks for markdown headers as a safety net.
+- iOS `TextEditor` grows unbounded by default; set `maxHeight` on input fields to prevent large pastes from pushing content off screen.

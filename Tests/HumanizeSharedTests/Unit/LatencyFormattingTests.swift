@@ -1,5 +1,5 @@
 import Testing
-@testable import HumanizeBar
+@testable import HumanizeShared
 
 @Suite("formatLatencySeconds")
 struct LatencyFormattingTests {

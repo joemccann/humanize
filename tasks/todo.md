@@ -62,7 +62,7 @@
 
 - Added a dedicated provider model mapping section in `README.md` under Configuration.
 - Added current provider model mapping in `AGENTS.md`.
-- Documented that the source of truth is `AIProvider.defaultModel` in `Sources/HumanizeBar/Types.swift`.
+- Documented that the source of truth is `AIProvider.defaultModel` in `Sources/HumanizeShared/Types.swift`.
 
 ## Change: Resolve OpenAI/Anthropic model-availability bugs and unify error UX
 
@@ -162,3 +162,64 @@
 
 - [x] T27: Remove the lower-right visual resize glyph and keep corner hotspot + cursor behavior (`depends_on: []`)
 - [x] T28: Run verification to ensure UI change compiles and tests remain green (`depends_on: [T27]`)
+
+## Change: Refactor to monorepo with cross-platform shared library and iOS app
+
+## Dependency Graph
+
+- T29 -> T30
+- T30 -> T31
+- T31 -> T32
+- T32 -> T33
+
+## Tasks
+
+- [x] T29: Extract `HumanizeShared` library from `HumanizeBar` — move 7 platform-agnostic files, add `public` access, split Types.swift into Types + AppAppearance (`depends_on: []`)
+- [x] T30: Reorganize tests — create `HumanizeTestSupport` with shared MockHTTPClient, move 11 test files to `HumanizeSharedTests`, update imports (`depends_on: [T29]`)
+- [x] T31: Create iOS app (`HumanizeMobile`) with TDD — 6 source files, 6 test files, MobileTheme matching macOS, all tests green (`depends_on: [T30]`)
+- [x] T32: Generate `HumanizeMobile.xcodeproj` via xcodegen, verify iOS simulator build + tests (`depends_on: [T31]`)
+- [x] T33: Update all docs (README, AGENTS, todo, lessons, DESIGN_MEMORY), verify build scripts, update .gitignore (`depends_on: [T32]`)
+
+## Review
+
+- Monorepo structure: `HumanizeShared` (7 files), `HumanizeBar` (5 files), `HumanizeMobile` (6 files).
+- Test structure: `HumanizeTestSupport` (shared mocks), `HumanizeSharedTests` (11 files), `HumanizeBarTests` (1 file), `HumanizeMobileTests` (6 files).
+- All file paths in docs updated from `Sources/HumanizeBar/` to `Sources/HumanizeShared/` where applicable.
+- Verification passed:
+  - `swift build` — zero errors
+  - `swift test` — 152 tests, 17 suites, 0 failures
+  - `xcodebuild test` (HumanizeMobileTests) — 20 tests, 6 suites, 0 failures
+  - `bash scripts/build-app.sh` — signed .app bundle
+  - Total: 172 tests, 23 suites
+
+## Change: Structured response parsing + "See Details" feature
+
+## Dependency Graph
+
+- T34 -> T35
+- T35 -> T36
+- T36 -> T37
+- T37 -> T38
+
+## Tasks
+
+- [x] T34: Write ResponseParsingTests (RED) — 8 tests for `parseHumanizeResponse` (`depends_on: []`)
+- [x] T35: Implement `parseHumanizeResponse` in TextUtilities.swift (GREEN) (`depends_on: [T34]`)
+- [x] T36: Add `analysis: String?` to `HumanizeResult`, wire into `parseResponse` and `humanize()` (`depends_on: [T35]`)
+- [x] T37: Update iOS ViewModel + View and macOS PopoverView with Details button + analysis overlay (`depends_on: [T36]`)
+- [x] T38: Update system prompt with `---` delimiter, cap iOS input maxHeight, full verification (`depends_on: [T37]`)
+
+## Review
+
+- Added `parseHumanizeResponse(_:)`: splits on `\n---\n` delimiter, heuristic fallback for markdown headers, plain text passthrough.
+- Added `analysis: String?` to `HumanizeResult` (backward-compatible default `nil`).
+- `parseResponse` returns `(text, analysis)` tuple; `humanize()` passes analysis through.
+- Updated system prompt with `## Output Format` section instructing `---` separator.
+- iOS: "Details" button + `AnalysisSheetView` sheet; capped input TextEditor `maxHeight: 280`.
+- macOS: "Details" button with `.popover` between Copy and Clear.
+- Verification passed:
+  - `swift build` — zero errors
+  - `swift test` — 163 tests, 18 suites, 0 failures
+  - `xcodebuild test` — 41 tests, 7 suites, 0 failures
+  - `bash scripts/build-app.sh` — signed .app bundle
+  - Total: 204 tests, 25 suites

@@ -11,3 +11,12 @@
 - When enabling popover resizing, do not hard-lock width in SwiftUI (`maxWidth == minWidth`); pair a resize handle with app-layer clamped `NSPopover.contentSize` updates.
 - Treat provider request options as model-specific contracts: for OpenAI GPT-5 chat models, omit `temperature` when the API indicates only the default value is supported.
 - For resize affordances in compact popovers, keep the corner drag hotspot functional but visually subtle or invisible unless explicitly requested.
+- When extracting a shared library from a single-target app, every type/property/method/init that needs cross-module visibility must be marked `public`. Swift does not auto-synthesize public memberwise inits for structs.
+- `UIPasteboard` is unreliable in iOS simulator unit tests; test that clipboard functions execute without error rather than asserting read-back values.
+- Use `UIColor { traitCollection in }` for iOS adaptive colors — the UIKit equivalent of `NSColor(name:) { appearance in }`.
+- XcodeGen (`project.yml`) generates and maintains Xcode project files cleanly alongside SPM Package.swift. Regenerate with `xcodegen generate` after changes.
+- SPM `swift test` only runs macOS targets; iOS tests need `xcodebuild test` with a simulator destination.
+- Extract shared test infrastructure (e.g., `MockHTTPClient`) into a non-test `.target` so multiple test targets can depend on it. SPM test targets cannot be dependencies of other test targets.
+- When LLM responses mix rewritten text with analysis, use a simple delimiter (`---`) in the system prompt for reliable structured parsing; add heuristic fallbacks for markdown headers as a safety net.
+- When `parseResponse` return types change (e.g., `String` to tuple), update all test call sites that compare against the old type — compiler errors in test targets are easy to miss with `swift build` alone.
+- iOS `TextEditor` grows unbounded by default; always set `maxHeight` on input fields to prevent large pastes from pushing content off screen.

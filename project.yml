@@ -1,0 +1,53 @@
+name: HumanizeMobile
+options:
+  bundleIdPrefix: com.humanize
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+packages:
+  HumanizeShared:
+    path: .
+schemes:
+  HumanizeMobile:
+    build:
+      targets:
+        HumanizeMobile: all
+        HumanizeMobileTests: [test]
+    test:
+      targets:
+        - HumanizeMobileTests
+    run:
+      config: Debug
+targets:
+  HumanizeMobile:
+    type: application
+    platform: iOS
+    sources:
+      - Sources/HumanizeMobile
+    dependencies:
+      - package: HumanizeShared
+        product: HumanizeShared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.humanize.mobile
+        SWIFT_VERSION: "6.0"
+        INFOPLIST_FILE: Sources/HumanizeMobile/Info.plist
+  HumanizeMobileTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/HumanizeMobileTests
+    dependencies:
+      - target: HumanizeMobile
+      - package: HumanizeShared
+        product: HumanizeShared
+      - package: HumanizeShared
+        product: HumanizeTestSupport
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.humanize.mobile.tests
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/HumanizeMobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HumanizeMobile"
+        BUNDLE_LOADER: "$(TEST_HOST)"

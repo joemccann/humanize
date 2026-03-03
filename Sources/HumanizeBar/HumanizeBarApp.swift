@@ -1,4 +1,5 @@
 import SwiftUI
+import HumanizeShared
 
 @main
 struct HumanizeBarApp: App {

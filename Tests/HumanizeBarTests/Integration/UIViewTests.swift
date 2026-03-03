@@ -1,6 +1,7 @@
 import Testing
 import SwiftUI
 @testable import HumanizeBar
+import HumanizeShared
 
 @MainActor
 @Suite("UI View Instantiation")

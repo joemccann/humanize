@@ -1,25 +1,7 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
-
-struct MockHTTPClient: HTTPClient, @unchecked Sendable {
-    let handler: @Sendable (URLRequest) async throws -> (Data, URLResponse)
-
-    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-        try await handler(request)
-    }
-}
-
-func mockResponse(json: [String: Any], statusCode: Int = 200) -> (Data, URLResponse) {
-    let data = try! JSONSerialization.data(withJSONObject: json)
-    let response = HTTPURLResponse(
-        url: URL(string: "https://example.com")!,
-        statusCode: statusCode,
-        httpVersion: nil,
-        headerFields: nil
-    )!
-    return (data, response)
-}
+@testable import HumanizeShared
+import HumanizeTestSupport
 
 @Suite("HumanizeAPIService")
 struct HumanizeAPIServiceTests {
@@ -160,7 +142,8 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .openai)
-        #expect(result == "Rewritten text here")
+        #expect(result.text == "Rewritten text here")
+        #expect(result.analysis == nil)
     }
 
     @Test("Parses Cerebras response correctly")
@@ -172,7 +155,8 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .cerebras)
-        #expect(result == "Rewritten text here")
+        #expect(result.text == "Rewritten text here")
+        #expect(result.analysis == nil)
     }
 
     @Test("Parses Anthropic response correctly")
@@ -184,7 +168,8 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .anthropic)
-        #expect(result == "Rewritten text here")
+        #expect(result.text == "Rewritten text here")
+        #expect(result.analysis == nil)
     }
 
     @Test("Parses Anthropic response when text block is not first")
@@ -197,7 +182,7 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .anthropic)
-        #expect(result == "Rewritten text here")
+        #expect(result.text == "Rewritten text here")
     }
 
     @Test("Parses first Anthropic text block when multiple are present")
@@ -210,7 +195,20 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .anthropic)
-        #expect(result == "First text block")
+        #expect(result.text == "First text block")
+    }
+
+    @Test("parseResponse extracts analysis from structured response")
+    func parseResponseWithAnalysis() throws {
+        let json: [String: Any] = [
+            "choices": [
+                ["message": ["content": "Clean text.\n---\nOveruse of em-dashes."]]
+            ]
+        ]
+        let data = try JSONSerialization.data(withJSONObject: json)
+        let result = try HumanizeAPIService.parseResponse(data: data, provider: .openai)
+        #expect(result.text == "Clean text.")
+        #expect(result.analysis == "Overuse of em-dashes.")
     }
 
     @Test("Empty OpenAI response throws invalidResponse")
@@ -663,7 +661,7 @@ struct HumanizeAPIServiceTests {
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = try HumanizeAPIService.parseResponse(data: data, provider: .openai)
-        #expect(result == "trimmed result")
+        #expect(result.text == "trimmed result")
     }
 
     @Test("OpenAI empty choices array throws invalidResponse")

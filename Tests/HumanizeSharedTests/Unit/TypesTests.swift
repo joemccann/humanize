@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
+@testable import HumanizeShared
 
 @Suite("HumanizeTone")
 struct HumanizeToneTests {
@@ -179,6 +179,7 @@ struct HumanizeResultTests {
     func fields() {
         let result = HumanizeResult(text: "output", provider: .cerebras, model: "zai-glm-4.7", latencyMs: 150)
         #expect(result.text == "output")
+        #expect(result.analysis == nil)
         #expect(result.provider == .cerebras)
         #expect(result.model == "zai-glm-4.7")
         #expect(result.latencyMs == 150)
@@ -189,5 +190,18 @@ struct HumanizeResultTests {
         let result = HumanizeResult(text: "rewritten", provider: .anthropic, model: AIProvider.anthropic.defaultModel, latencyMs: 300)
         #expect(result.provider == .anthropic)
         #expect(result.model == AIProvider.anthropic.defaultModel)
+    }
+
+    @Test("Analysis field stores value when provided")
+    func analysisField() {
+        let result = HumanizeResult(text: "output", analysis: "AI patterns found", provider: .openai, model: "gpt-5", latencyMs: 100)
+        #expect(result.text == "output")
+        #expect(result.analysis == "AI patterns found")
+    }
+
+    @Test("Analysis defaults to nil")
+    func analysisDefaultsNil() {
+        let result = HumanizeResult(text: "output", provider: .openai, model: "gpt-5", latencyMs: 100)
+        #expect(result.analysis == nil)
     }
 }

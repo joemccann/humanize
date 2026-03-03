@@ -3,7 +3,7 @@ import SwiftUI
 
 @Observable
 @MainActor
-final class SettingsStore {
+public final class SettingsStore {
     private static let toneKey = "humanize.tone"
     private static let providerKey = "humanize.provider"
     private static let cerebrasKeyKey = "humanize.cerebrasAPIKey"
@@ -13,56 +13,56 @@ final class SettingsStore {
 
     private let defaults: UserDefaults
 
-    var tone: HumanizeTone {
+    public var tone: HumanizeTone {
         didSet { defaults.set(tone.rawValue, forKey: Self.toneKey) }
     }
 
-    var provider: AIProvider {
+    public var provider: AIProvider {
         didSet {
             normalizeProviderSelectionIfNeeded()
             defaults.set(provider.rawValue, forKey: Self.providerKey)
         }
     }
 
-    var cerebrasAPIKey: String {
+    public var cerebrasAPIKey: String {
         didSet {
             defaults.set(cerebrasAPIKey, forKey: Self.cerebrasKeyKey)
             normalizeProviderSelectionIfNeeded()
         }
     }
 
-    var openaiAPIKey: String {
+    public var openaiAPIKey: String {
         didSet {
             defaults.set(openaiAPIKey, forKey: Self.openaiKeyKey)
             normalizeProviderSelectionIfNeeded()
         }
     }
 
-    var anthropicAPIKey: String {
+    public var anthropicAPIKey: String {
         didSet {
             defaults.set(anthropicAPIKey, forKey: Self.anthropicKeyKey)
             normalizeProviderSelectionIfNeeded()
         }
     }
 
-    var appearance: AppAppearance {
+    public var appearance: AppAppearance {
         didSet { defaults.set(appearance.rawValue, forKey: Self.appearanceKey) }
     }
 
-    var hasRequiredAPIKey: Bool {
+    public var hasRequiredAPIKey: Bool {
         currentProviderForRequest != nil
     }
 
-    var currentAPIKey: String? {
+    public var currentAPIKey: String? {
         guard let provider = currentProviderForRequest else { return nil }
         return apiKey(for: provider)
     }
 
-    var currentProviderForRequest: AIProvider? {
+    public var currentProviderForRequest: AIProvider? {
         providerAttemptOrder.first { apiKey(for: $0) != nil }
     }
 
-    var providerAttemptOrder: [AIProvider] {
+    public var providerAttemptOrder: [AIProvider] {
         switch provider {
         case .cerebras:
             [provider] + AIProvider.recommendedOrder.filter { $0 != provider }
@@ -71,11 +71,11 @@ final class SettingsStore {
         }
     }
 
-    var selectableProviders: [AIProvider] {
+    public var selectableProviders: [AIProvider] {
         AIProvider.recommendedOrder.filter { hasAPIKey(for: $0) }
     }
 
-    func apiKey(for provider: AIProvider) -> String? {
+    public func apiKey(for provider: AIProvider) -> String? {
         switch provider {
         case .cerebras:
             sanitizedKey(cerebrasAPIKey)
@@ -86,11 +86,11 @@ final class SettingsStore {
         }
     }
 
-    func hasAPIKey(for provider: AIProvider) -> Bool {
+    public func hasAPIKey(for provider: AIProvider) -> Bool {
         apiKey(for: provider) != nil
     }
 
-    init(defaults: UserDefaults = .standard) {
+    public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
         self.tone = defaults.string(forKey: Self.toneKey)

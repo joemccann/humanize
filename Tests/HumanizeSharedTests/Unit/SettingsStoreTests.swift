@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
+@testable import HumanizeShared
 
 @MainActor
 @Suite("SettingsStore")

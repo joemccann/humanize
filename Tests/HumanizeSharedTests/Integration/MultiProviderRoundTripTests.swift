@@ -1,6 +1,7 @@
 import Testing
 import Foundation
-@testable import HumanizeBar
+@testable import HumanizeShared
+import HumanizeTestSupport
 
 @Suite("Multi-Provider Round Trip")
 struct MultiProviderRoundTripTests {
