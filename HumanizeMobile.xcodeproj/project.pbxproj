@@ -15,6 +15,7 @@
 		5DE924F989AE4971371374B9 /* Clipboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B288778D15BBD74179EB177 /* Clipboard.swift */; };
 		69084ED5EF3591D8FD3816F8 /* HumanizeMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1DA3044B78DFAD2DB7E6D68 /* HumanizeMobileApp.swift */; };
 		6F8FB186041C326991FE8EA6 /* MobileTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D42114FA2572D48AB49A53 /* MobileTheme.swift */; };
+		996CC44EAD925DAA72558D75 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5F9158F1F7DF6BE48A4A2E26 /* Assets.xcassets */; };
 		9FBD51E10ACA39908C2E881C /* AppLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A928EC4B411BAC0D7454D0B0 /* AppLaunchTests.swift */; };
 		A20925026D46F68C7E5BB6B3 /* HumanizeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DD41C8A15E15EEADF87F89 /* HumanizeViewModelTests.swift */; };
 		B49F75806D6293137D9F22F2 /* MobileSettingsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAE91BCF4A1BEC7F1EDC7BB /* MobileSettingsViewTests.swift */; };
@@ -45,6 +46,7 @@
 		3C2452C378814B416ECEFBCF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		448F311EA672CA1A11EFD820 /* MobileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSettingsView.swift; sourceTree = "<group>"; };
 		4CAE91BCF4A1BEC7F1EDC7BB /* MobileSettingsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSettingsViewTests.swift; sourceTree = "<group>"; };
+		5F9158F1F7DF6BE48A4A2E26 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		628AEE25FDE498462F88D78A /* ClipboardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardTests.swift; sourceTree = "<group>"; };
 		6B288778D15BBD74179EB177 /* Clipboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clipboard.swift; sourceTree = "<group>"; };
 		78D42114FA2572D48AB49A53 /* MobileTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileTheme.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 		74DD632F2110391F670EDC1C /* HumanizeMobile */ = {
 			isa = PBXGroup;
 			children = (
+				5F9158F1F7DF6BE48A4A2E26 /* Assets.xcassets */,
 				6B288778D15BBD74179EB177 /* Clipboard.swift */,
 				316C8897545143BC5B6AD0AA /* ContentView.swift */,
 				F1DA3044B78DFAD2DB7E6D68 /* HumanizeMobileApp.swift */,
@@ -174,6 +177,7 @@
 			buildConfigurationList = E9FD33CBB039C5D786044BF3 /* Build configuration list for PBXNativeTarget "HumanizeMobile" */;
 			buildPhases = (
 				B809019B1A943061A1721B94 /* Sources */,
+				DEB3F62BBD76D2A362693CBA /* Resources */,
 				3A4A43CA7BD0092FB450DCA8 /* Frameworks */,
 			);
 			buildRules = (
@@ -240,6 +244,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DEB3F62BBD76D2A362693CBA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				996CC44EAD925DAA72558D75 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		51F686503855B5B01AE0AC9D /* Sources */ = {
