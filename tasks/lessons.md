@@ -20,3 +20,5 @@
 - When LLM responses mix rewritten text with analysis, use a simple delimiter (`---`) in the system prompt for reliable structured parsing; add heuristic fallbacks for markdown headers as a safety net.
 - When `parseResponse` return types change (e.g., `String` to tuple), update all test call sites that compare against the old type — compiler errors in test targets are easy to miss with `swift build` alone.
 - iOS `TextEditor` grows unbounded by default; always set `maxHeight` on input fields to prevent large pastes from pushing content off screen.
+- Use `AttributedString(markdown:, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))` to render inline markdown in SwiftUI `Text` while preserving line breaks. Preprocess LLM dash lists into `•` bullets with blank-line spacing before rendering.
+- Modern iOS (17+) only needs a single 1024x1024 universal icon in `Assets.xcassets/AppIcon.appiconset`; Xcode derives all sizes. Share the same source PNG as macOS.

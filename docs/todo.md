@@ -260,6 +260,8 @@
   - iOS: Details button + analysis sheet, input maxHeight cap
   - macOS: Details button + analysis popover
   - System prompt updated with `---` output format
+  - Analysis rendered as rich markdown via `AttributedString`; `formatAnalysisForDisplay()` converts dashes to `•` bullets with spacing
+  - iOS app icon added via `Assets.xcassets` using shared `Resources/AppIcon-1024.png` source
 
 ## Up next
 

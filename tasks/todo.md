@@ -223,3 +223,5 @@
   - `xcodebuild test` — 41 tests, 7 suites, 0 failures
   - `bash scripts/build-app.sh` — signed .app bundle
   - Total: 204 tests, 25 suites
+  - Analysis rendered as rich markdown via `AttributedString`; `formatAnalysisForDisplay()` converts dashes to `•` bullets with spacing
+  - iOS app icon added via `Assets.xcassets` using shared `Resources/AppIcon-1024.png` source

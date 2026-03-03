@@ -2,7 +2,7 @@
 
 ## Project context
 
-`humanize` is a cross-platform app (macOS menu bar + iOS) that rewrites AI-generated text into natural, human-sounding prose. The codebase is a Swift monorepo with three targets: `HumanizeShared` (cross-platform library), `HumanizeBar` (macOS), and `HumanizeMobile` (iOS via Xcode project). Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs. Cerebras falls back to `gpt-oss-120b` on model_not_found, then cross-provider to OpenAI/Anthropic. Other providers stay strict. Responses are parsed into humanized text + optional AI analysis (split on `---` delimiter); a "Details" button reveals the analysis.
+`humanize` is a cross-platform app (macOS menu bar + iOS) that rewrites AI-generated text into natural, human-sounding prose. The codebase is a Swift monorepo with three targets: `HumanizeShared` (cross-platform library), `HumanizeBar` (macOS), and `HumanizeMobile` (iOS via Xcode project). Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs. Cerebras falls back to `gpt-oss-120b` on model_not_found, then cross-provider to OpenAI/Anthropic. Other providers stay strict. Responses are parsed into humanized text + optional AI analysis (split on `---` delimiter); a "Details" button reveals the analysis rendered as rich markdown via `AttributedString`. Analysis text is preprocessed by `formatAnalysisForDisplay()` to convert dash lists to bullet points with spacing.
 
 Current provider models (from `AIProvider.defaultModel`):
 - Cerebras: `zai-glm-4.7` (fallback: `gpt-oss-120b`)
@@ -54,7 +54,7 @@ Runtime behavior:
 | `Sources/HumanizeShared/HumanizeAPIService.swift` | API request orchestration |
 | `Sources/HumanizeShared/SettingsStore.swift` | Persisted user preferences |
 | `Sources/HumanizeShared/SystemPrompt.swift` | Embedded rewrite prompt |
-| `Sources/HumanizeShared/TextUtilities.swift` | Text normalization, formatting, response parsing |
+| `Sources/HumanizeShared/TextUtilities.swift` | Text normalization, formatting, response parsing, analysis display |
 | `Sources/HumanizeShared/AppAppearance.swift` | Appearance enum with macOS resolver |
 | `Sources/HumanizeBar/HumanizeBarApp.swift` | macOS app entry point |
 | `Sources/HumanizeBar/AppDelegate.swift` | Menu bar status item + popover |
@@ -65,6 +65,7 @@ Runtime behavior:
 | `Sources/HumanizeMobile/MobileTheme.swift` | iOS adaptive color tokens |
 | `Tests/HumanizeTestSupport/MockHTTPClient.swift` | Shared test infrastructure |
 | `project.yml` | XcodeGen spec for iOS project |
+| `Sources/HumanizeMobile/Assets.xcassets/` | iOS app icon asset catalog |
 | `Resources/AppIcon-1024.png` | Source-of-truth app icon artwork |
 | `scripts/build-app.sh` | Local signed app bundle build |
 | `scripts/publish-app.sh` | Production packaging (sign, notarize, install) |

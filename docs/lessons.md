@@ -58,3 +58,5 @@
 - System prompt embedded in code (`SystemPrompt.swift`) is simpler and more testable than runtime fetching.
 - When LLM responses mix rewritten text with analysis, use a simple delimiter (`---`) in the system prompt for reliable structured parsing; add heuristic fallbacks for markdown headers as a safety net.
 - iOS `TextEditor` grows unbounded by default; set `maxHeight` on input fields to prevent large pastes from pushing content off screen.
+- Use `AttributedString(markdown:, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))` to render inline markdown (bold, italic) in SwiftUI `Text` while preserving line breaks. Preprocess LLM dash lists into `•` bullets with blank-line spacing for readable display.
+- Modern iOS (17+) only needs a single 1024x1024 universal icon in `Assets.xcassets/AppIcon.appiconset`; Xcode derives all required sizes automatically. Share the same source PNG as macOS.
