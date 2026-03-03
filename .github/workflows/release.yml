@@ -26,8 +26,8 @@ jobs:
           mkdir -p "${APP_DIR}/Contents/Resources"
 
           cp ".build/release/HumanizeBar" "${APP_DIR}/Contents/MacOS/HumanizeBar"
-          cp "Info.plist" "${APP_DIR}/Contents/"
-          cp "Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+          cp "macos/Info.plist" "${APP_DIR}/Contents/"
+          cp "shared/Resources/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
 
           codesign --force --sign - "$APP_DIR"
 

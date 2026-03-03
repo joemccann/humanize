@@ -87,7 +87,7 @@
 #### Review
 
 - Added explicit provider → model mapping for Cerebras, OpenAI, and Anthropic.
-- Clarified source of truth as `AIProvider.defaultModel` in `Sources/HumanizeShared/Types.swift`.
+- Clarified source of truth as `AIProvider.defaultModel` in `shared/Sources/Types.swift`.
 
 ### Change: Fix runtime model selection for OpenAI/Anthropic and improve error UX
 
@@ -219,7 +219,7 @@
 
 #### Review
 
-- Extracted 7 platform-agnostic files into `Sources/HumanizeShared/` with `public` access control.
+- Extracted 7 platform-agnostic files into `shared/Sources/` with `public` access control.
 - Split `Types.swift` into `Types.swift` + `AppAppearance.swift` (with `#if os(macOS)` for `resolvedColorScheme`).
 - Extracted `normalizeInputWhitespace` and `formatLatencySeconds` into `TextUtilities.swift`.
 - Created `Tests/HumanizeTestSupport/MockHTTPClient.swift` as shared test infrastructure.

@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-RESOURCES_DIR="${PROJECT_DIR}/Resources"
+RESOURCES_DIR="${PROJECT_DIR}/shared/Resources"
 SOURCE_PNG="${RESOURCES_DIR}/AppIcon-1024.png"
 ICONSET_DIR="${RESOURCES_DIR}/AppIcon.iconset"
 ICNS_PATH="${RESOURCES_DIR}/AppIcon.icns"
@@ -16,7 +16,7 @@ Usage: bash scripts/generate-app-icons.sh [--source <path>] [--help]
 Generate macOS app icon assets from a 1024x1024 (or larger square) PNG source.
 
 Options:
-  --source <path>  Source master PNG. Default: Resources/AppIcon-1024.png
+  --source <path>  Source master PNG. Default: shared/Resources/AppIcon-1024.png
   -h, --help       Show this help message.
 USAGE
 }

@@ -24,7 +24,7 @@ targets:
     type: application
     platform: iOS
     sources:
-      - Sources/HumanizeMobile
+      - ios/Sources
     dependencies:
       - package: HumanizeShared
         product: HumanizeShared
@@ -32,13 +32,13 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.humanize.mobile
         SWIFT_VERSION: "6.0"
-        INFOPLIST_FILE: Sources/HumanizeMobile/Info.plist
+        INFOPLIST_FILE: ios/Sources/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   HumanizeMobileTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - Tests/HumanizeMobileTests
+      - ios/Tests
     dependencies:
       - target: HumanizeMobile
       - package: HumanizeShared

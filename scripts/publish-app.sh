@@ -10,7 +10,7 @@ DIST_DIR="${PROJECT_DIR}/dist"
 APP_DIR="${DIST_DIR}/${APP_BUNDLE_NAME}"
 ZIP_PATH="${DIST_DIR}/${APP_NAME}.zip"
 APPLICATIONS_PATH="/Applications/${APP_BUNDLE_NAME}"
-ICON_PATH="${PROJECT_DIR}/Resources/AppIcon.icns"
+ICON_PATH="${PROJECT_DIR}/shared/Resources/AppIcon.icns"
 
 SIGNING_IDENTITY="${PUBLISH_SIGNING_IDENTITY:-}"
 NOTARY_PROFILE="${PUBLISH_NOTARY_PROFILE:-}"
@@ -113,7 +113,7 @@ echo "2/7 Create clean app bundle in dist/"
 rm -rf "${APP_DIR}" "${ZIP_PATH}"
 mkdir -p "${APP_DIR}/Contents/MacOS" "${APP_DIR}/Contents/Resources"
 cp ".build/release/${APP_NAME}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
-cp "Info.plist" "${APP_DIR}/Contents/"
+cp "macos/Info.plist" "${APP_DIR}/Contents/"
 
 if [[ ! -f "${ICON_PATH}" ]]; then
     echo "Error: missing app icon at ${ICON_PATH}" >&2

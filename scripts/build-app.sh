@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 APP_NAME="HumanizeBar"
 APP_DIR="${PROJECT_DIR}/${APP_NAME}.app"
-ICON_PATH="${PROJECT_DIR}/Resources/AppIcon.icns"
+ICON_PATH="${PROJECT_DIR}/shared/Resources/AppIcon.icns"
 
 echo "Building ${APP_NAME}..."
 cd "$PROJECT_DIR"
@@ -20,7 +20,7 @@ mkdir -p "${APP_DIR}/Contents/Resources"
 cp ".build/release/${APP_NAME}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 
 # Copy Info.plist
-cp "Info.plist" "${APP_DIR}/Contents/"
+cp "macos/Info.plist" "${APP_DIR}/Contents/"
 
 if [[ ! -f "${ICON_PATH}" ]]; then
     echo "Error: missing app icon at ${ICON_PATH}" >&2

@@ -50,22 +50,22 @@ Runtime behavior:
 
 | File | Purpose |
 |---|---|
-| `Sources/HumanizeShared/Types.swift` | Shared enums and models |
-| `Sources/HumanizeShared/HumanizeAPIService.swift` | API request orchestration |
-| `Sources/HumanizeShared/SettingsStore.swift` | Persisted user preferences |
-| `Sources/HumanizeShared/SystemPrompt.swift` | Embedded rewrite prompt |
-| `Sources/HumanizeShared/TextUtilities.swift` | Text normalization, formatting, response parsing, analysis display |
-| `Sources/HumanizeShared/AppAppearance.swift` | Appearance enum with macOS resolver |
-| `Sources/HumanizeBar/HumanizeBarApp.swift` | macOS app entry point |
-| `Sources/HumanizeBar/AppDelegate.swift` | Menu bar status item + popover |
-| `Sources/HumanizeBar/PopoverView.swift` | macOS main UI + Theme |
-| `Sources/HumanizeMobile/HumanizeMobileApp.swift` | iOS app entry point |
-| `Sources/HumanizeMobile/HumanizeView.swift` | iOS main UI + analysis sheet |
-| `Sources/HumanizeMobile/HumanizeViewModel.swift` | @Observable MVVM view model |
-| `Sources/HumanizeMobile/MobileTheme.swift` | iOS adaptive color tokens |
-| `Tests/HumanizeTestSupport/MockHTTPClient.swift` | Shared test infrastructure |
+| `shared/Sources/Types.swift` | Shared enums and models |
+| `shared/Sources/HumanizeAPIService.swift` | API request orchestration |
+| `shared/Sources/SettingsStore.swift` | Persisted user preferences |
+| `shared/Sources/SystemPrompt.swift` | Embedded rewrite prompt |
+| `shared/Sources/TextUtilities.swift` | Text normalization, formatting, response parsing, analysis display |
+| `shared/Sources/AppAppearance.swift` | Appearance enum with macOS resolver |
+| `macos/Sources/HumanizeBarApp.swift` | macOS app entry point |
+| `macos/Sources/AppDelegate.swift` | Menu bar status item + popover |
+| `macos/Sources/PopoverView.swift` | macOS main UI + Theme |
+| `ios/Sources/HumanizeMobileApp.swift` | iOS app entry point |
+| `ios/Sources/HumanizeView.swift` | iOS main UI + analysis sheet |
+| `ios/Sources/HumanizeViewModel.swift` | @Observable MVVM view model |
+| `ios/Sources/MobileTheme.swift` | iOS adaptive color tokens |
+| `shared/Tests/HumanizeTestSupport/MockHTTPClient.swift` | Shared test infrastructure |
 | `project.yml` | XcodeGen spec for iOS project |
-| `Sources/HumanizeMobile/Assets.xcassets/` | iOS app icon asset catalog |
-| `Resources/AppIcon-1024.png` | Source-of-truth app icon artwork |
+| `ios/Sources/Assets.xcassets/` | iOS app icon asset catalog |
+| `shared/Resources/AppIcon-1024.png` | Source-of-truth app icon artwork |
 | `scripts/build-app.sh` | Local signed app bundle build |
 | `scripts/publish-app.sh` | Production packaging (sign, notarize, install) |

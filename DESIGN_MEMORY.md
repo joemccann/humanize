@@ -28,10 +28,10 @@ Current decision: Variant E (without the top-left mini bubble) is the approved p
 - Avoid over-detailed micro-elements.
 
 ## Repo Conventions
-- Source-of-truth icon at `Resources/AppIcon-1024.png`.
+- Source-of-truth icon at `shared/Resources/AppIcon-1024.png`.
 - Derived assets generated via `bash scripts/generate-app-icons.sh`.
-- Build/publish scripts expect `Resources/AppIcon.icns`.
-- iOS icon lives in `Sources/HumanizeMobile/Assets.xcassets/AppIcon.appiconset/` (single 1024x1024 universal asset copied from `Resources/AppIcon-1024.png`).
+- Build/publish scripts expect `shared/Resources/AppIcon.icns`.
+- iOS icon lives in `ios/Sources/Assets.xcassets/AppIcon.appiconset/` (single 1024x1024 universal asset copied from `shared/Resources/AppIcon-1024.png`).
 - Monorepo: `HumanizeShared` (cross-platform), `HumanizeBar` (macOS), `HumanizeMobile` (iOS).
 - iOS theme (`MobileTheme`) mirrors macOS Theme with identical RGB values using `UIColor` adaptive pattern.
 - Design tokens are consistent across both platforms.

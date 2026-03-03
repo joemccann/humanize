@@ -62,7 +62,7 @@
 
 - Added a dedicated provider model mapping section in `README.md` under Configuration.
 - Added current provider model mapping in `AGENTS.md`.
-- Documented that the source of truth is `AIProvider.defaultModel` in `Sources/HumanizeShared/Types.swift`.
+- Documented that the source of truth is `AIProvider.defaultModel` in `shared/Sources/Types.swift`.
 
 ## Change: Resolve OpenAI/Anthropic model-availability bugs and unify error UX
 
@@ -184,7 +184,7 @@
 
 - Monorepo structure: `HumanizeShared` (7 files), `HumanizeBar` (5 files), `HumanizeMobile` (6 files).
 - Test structure: `HumanizeTestSupport` (shared mocks), `HumanizeSharedTests` (11 files), `HumanizeBarTests` (1 file), `HumanizeMobileTests` (6 files).
-- All file paths in docs updated from `Sources/HumanizeBar/` to `Sources/HumanizeShared/` where applicable.
+- All file paths in docs updated from `Sources/HumanizeBar/` to `shared/Sources/` where applicable.
 - Verification passed:
   - `swift build` — zero errors
   - `swift test` — 152 tests, 17 suites, 0 failures

@@ -74,11 +74,11 @@ Build and run the `HumanizeMobileTests` scheme in Xcode targeting an iOS simulat
 bash scripts/generate-app-icons.sh
 ```
 
-This generates icon assets from `Resources/AppIcon-1024.png` (or pass `--source <path>`):
+This generates icon assets from `shared/Resources/AppIcon-1024.png` (or pass `--source <path>`):
 
-- `Resources/AppIcon-1024.png`
-- `Resources/AppIcon.iconset/*`
-- `Resources/AppIcon.icns`
+- `shared/Resources/AppIcon-1024.png`
+- `shared/Resources/AppIcon.iconset/*`
+- `shared/Resources/AppIcon.icns`
 
 ## Create .app bundle
 
@@ -166,7 +166,7 @@ All settings are managed in-app via the settings panel:
 
 ### Provider Models
 
-Current default models by provider (source of truth: `AIProvider.defaultModel` in `Sources/HumanizeShared/Types.swift`):
+Current default models by provider (source of truth: `AIProvider.defaultModel` in `shared/Sources/Types.swift`):
 
 - **Cerebras** — `zai-glm-4.7` (fallback: `gpt-oss-120b`)
 - **OpenAI** — `gpt-5.2-chat-latest`
@@ -177,8 +177,8 @@ At request time, OpenAI and Anthropic model lists are queried with your API key 
 ## Architecture
 
 ```
-Sources/
-  HumanizeShared/                        # Cross-platform shared library
+shared/
+  Sources/                               # HumanizeShared (cross-platform library)
   ├── Types.swift                        # HumanizeTone, AIProvider, HumanizeResult, HumanizeError
   ├── AppAppearance.swift                # AppAppearance + #if os(macOS) resolvedColorScheme
   ├── HTTPClient.swift                   # Async networking protocol
@@ -186,15 +186,23 @@ Sources/
   ├── HumanizeAPIService.swift           # Provider request orchestration
   ├── SettingsStore.swift                # @Observable persistence via UserDefaults
   └── TextUtilities.swift               # normalizeInputWhitespace, formatLatencySeconds, parseHumanizeResponse, formatAnalysisForDisplay
+  Tests/
+  ├── HumanizeSharedTests/              # Shared library tests (CLI)
+  └── HumanizeTestSupport/              # MockHTTPClient shared test infrastructure
+  Resources/                             # AppIcon-1024.png, .iconset/, .icns
 
-  HumanizeBar/                           # macOS menu bar app
+macos/
+  Sources/                               # HumanizeBar (macOS menu bar app)
   ├── HumanizeBarApp.swift               # App entry point (menu bar only)
   ├── AppDelegate.swift                  # Status item + popover lifecycle
   ├── PopoverView.swift                  # Main UI + Theme
   ├── PopoverSizing.swift                # NSSize constants
   └── SettingsView.swift                 # macOS settings window
+  Tests/                                 # HumanizeBarTests (macOS-only tests)
+  Info.plist                             # macOS bundle config
 
-  HumanizeMobile/                        # iOS app
+ios/
+  Sources/                               # HumanizeMobile (iOS app)
   ├── HumanizeMobileApp.swift            # iOS @main entry
   ├── ContentView.swift                  # NavigationStack root
   ├── HumanizeView.swift                 # iOS main UI + analysis sheet
@@ -203,12 +211,7 @@ Sources/
   ├── MobileTheme.swift                  # UIColor adaptive colors
   ├── Clipboard.swift                    # UIPasteboard wrapper
   └── Assets.xcassets/                   # iOS app icon (1024x1024 universal)
-
-Tests/
-  HumanizeTestSupport/MockHTTPClient.swift  # Shared test infrastructure
-  HumanizeSharedTests/                      # Shared library tests (CLI)
-  HumanizeBarTests/                         # macOS-only tests (CLI)
-  HumanizeMobileTests/                      # iOS tests (Xcode)
+  Tests/                                 # HumanizeMobileTests (iOS tests, Xcode)
 ```
 
 Operational scripts:
