@@ -34,6 +34,8 @@ targets:
         SWIFT_VERSION: "6.0"
         INFOPLIST_FILE: ios/Sources/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: "8AL982H469"
   HumanizeMobileTests:
     type: bundle.unit-test
     platform: iOS

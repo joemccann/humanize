@@ -221,6 +221,12 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					1FE04197DBCCC32F650F7588 = {
+						DevelopmentTeam = 8AL982H469;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 507E165FBA085EF6FD1D63EE /* Build configuration list for PBXProject "HumanizeMobile" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -319,6 +325,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8AL982H469;
 				INFOPLIST_FILE = ios/Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -473,6 +481,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8AL982H469;
 				INFOPLIST_FILE = ios/Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -1,7 +1,10 @@
+#if canImport(AppKit)
 import AppKit
+#endif
 import SwiftUI
 import HumanizeShared
 
+#if os(macOS)
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
@@ -114,3 +117,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Swift.max(min, Swift.min(max, value))
     }
 }
+#endif

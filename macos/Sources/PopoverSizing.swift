@@ -1,3 +1,4 @@
+#if os(macOS)
 import AppKit
 import HumanizeShared
 
@@ -6,3 +7,4 @@ enum PopoverSizing {
     static let minSize = NSSize(width: 420, height: 340)
     static let maxSize = NSSize(width: 900, height: 900)
 }
+#endif

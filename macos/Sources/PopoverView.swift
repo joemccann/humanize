@@ -1,4 +1,5 @@
 import SwiftUI
+#if os(macOS)
 import AppKit
 import HumanizeShared
 
@@ -863,3 +864,4 @@ extension View {
         modifier(TextEditorInset(inset: NSSize(width: inset, height: inset)))
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import HumanizeShared
 
@@ -12,3 +13,4 @@ struct HumanizeBarApp: App {
         }
     }
 }
+#endif

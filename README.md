@@ -48,7 +48,13 @@ swift build
 
 ### iOS (Xcode)
 
-Open `HumanizeMobile.xcodeproj` in Xcode and build the `HumanizeMobile` scheme for an iOS simulator or device.
+First, create the iOS Xcode project (one-time setup):
+
+```bash
+bash scripts/create-ios-project.sh
+```
+
+Then open `HumanizeMobile/HumanizeMobile.xcodeproj` in Xcode and build the `HumanizeMobile` scheme for an iOS simulator or device.
 
 ## Test
 
