@@ -1,5 +1,10 @@
 import Foundation
 
+public func formatAnalysisForDisplay(_ raw: String) -> String {
+    raw.replacingOccurrences(of: "(?m)^- ", with: "• ", options: .regularExpression)
+       .replacingOccurrences(of: "(?m)^(• .+)\n(• )", with: "$1\n\n$2", options: .regularExpression)
+}
+
 public func parseHumanizeResponse(_ raw: String) -> (text: String, analysis: String?) {
     // 1. Try explicit --- delimiter (first occurrence only)
     if let delimiterRange = raw.range(of: "\n---\n") {

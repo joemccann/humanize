@@ -378,10 +378,15 @@ private struct AnalysisSheetView: View {
     @Environment(\.dismiss) private var dismiss
     let analysis: String
 
+    private var rendered: AttributedString {
+        let formatted = formatAnalysisForDisplay(analysis)
+        return (try? AttributedString(markdown: formatted, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(formatted)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                Text(analysis)
+                Text(rendered)
                     .font(.system(size: 15))
                     .lineSpacing(3)
                     .foregroundStyle(MobileTheme.textPrimary)

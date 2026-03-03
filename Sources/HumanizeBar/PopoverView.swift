@@ -558,7 +558,7 @@ struct PopoverView: View {
                     .buttonStyle(.plain)
                     .popover(isPresented: $showAnalysis) {
                         ScrollView {
-                            Text(analysisText ?? "")
+                            Text(renderedAnalysis)
                                 .font(.system(size: 12))
                                 .lineSpacing(3)
                                 .foregroundStyle(Theme.textPrimary)
@@ -620,6 +620,12 @@ struct PopoverView: View {
 
     private var isDisabled: Bool {
         inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isProcessing
+    }
+
+    private var renderedAnalysis: AttributedString {
+        guard let md = analysisText else { return AttributedString() }
+        let formatted = formatAnalysisForDisplay(md)
+        return (try? AttributedString(markdown: formatted, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(formatted)
     }
 
     private func humanize() {
