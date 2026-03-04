@@ -8,6 +8,9 @@ let package = Package(
         .library(name: "HumanizeShared", targets: ["HumanizeShared"]),
         .library(name: "HumanizeTestSupport", targets: ["HumanizeTestSupport"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "2.2.0"),
+    ],
     targets: [
         .target(name: "HumanizeShared", path: "shared/Sources"),
         .target(name: "HumanizeTestSupport", dependencies: ["HumanizeShared"], path: "shared/Tests/HumanizeTestSupport"),
@@ -21,8 +24,18 @@ let package = Package(
             dependencies: ["HumanizeShared"],
             path: "ios/Sources"
         ),
+        .executableTarget(
+            name: "HumanizeLauncher",
+            dependencies: ["HumanizeShared", "KeyboardShortcuts"],
+            path: "launcher/Sources"
+        ),
         .testTarget(name: "HumanizeSharedTests", dependencies: ["HumanizeShared", "HumanizeTestSupport"], path: "shared/Tests/HumanizeSharedTests"),
         .testTarget(name: "HumanizeBarTests", dependencies: ["HumanizeBar", "HumanizeShared", "HumanizeTestSupport"], path: "macos/Tests"),
         .testTarget(name: "HumanizeMobileTests", dependencies: ["HumanizeMobile", "HumanizeShared", "HumanizeTestSupport"], path: "ios/Tests"),
+        .testTarget(
+            name: "HumanizeLauncherTests",
+            dependencies: ["HumanizeLauncher", "HumanizeShared", "HumanizeTestSupport", "KeyboardShortcuts"],
+            path: "launcher/Tests/HumanizeLauncherTests"
+        ),
     ]
 )
