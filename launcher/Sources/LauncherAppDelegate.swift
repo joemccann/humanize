@@ -22,7 +22,7 @@ final class LauncherAppDelegate: NSObject, NSApplicationDelegate {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
             button.image = NSImage(
-                systemSymbolName: "text.bubble",
+                systemSymbolName: "wand.and.stars",
                 accessibilityDescription: "Humanize Launcher"
             )
             button.action = #selector(statusItemClicked)
