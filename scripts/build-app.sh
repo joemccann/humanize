@@ -9,7 +9,7 @@ ICON_PATH="${PROJECT_DIR}/shared/Resources/AppIcon.icns"
 
 echo "Building ${APP_NAME}..."
 cd "$PROJECT_DIR"
-swift build -c release
+swift build -c release --target HumanizeBar
 
 echo "Creating app bundle..."
 rm -rf "$APP_DIR"

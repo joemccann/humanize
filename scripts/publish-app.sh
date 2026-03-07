@@ -107,7 +107,7 @@ echo "Publishing ${APP_NAME} from ${PROJECT_DIR}"
 cd "${PROJECT_DIR}"
 
 echo "1/7 Build release binary"
-swift build -c release
+swift build -c release --target HumanizeBar
 
 echo "2/7 Create clean app bundle in dist/"
 rm -rf "${APP_DIR}" "${ZIP_PATH}"
