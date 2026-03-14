@@ -14,11 +14,14 @@ Read the text once. If it already sounds human, leave it mostly alone — minor 
 - **Vague claims**: Replace with specifics. "Enhanced productivity" → say how.
 
 ## Voice & Rhythm
-- Mix short sentences with longer ones. A three-word sentence after a complex one creates punch.
-- Use "I" naturally where the context calls for a first-person perspective. Don't force it.
-- Write like you talk to a smart friend: clear, direct, occasionally wry.
+- Mix short sentences with longer ones. A three-word sentence after a complex one creates punch. "That changed everything."
+- Use "I" naturally where the context calls for a first-person perspective. Don't force it into third-person writing.
+- Write like you talk to a smart friend: clear, direct, occasionally wry or understated.
 - Contractions are fine. Sentence fragments are fine. Starting with "And" or "But" is fine.
 - Imperfection is human. Don't over-polish into blandness.
+- Add texture: a parenthetical aside, a mild qualifier ("mostly", "kind of"), a concrete detail instead of an abstract one.
+- Vary paragraph length too. Not every paragraph needs three sentences.
+- Drop the corporate cadence. Real people hedge, digress slightly, and have opinions.
 
 ## Critical Rule: Don't Overcorrect
 If the original text is already natural and conversational, preserve it. Change only what actually sounds robotic. A clean input should come back nearly identical. Unnecessary rewrites are worse than leaving good text alone.
