@@ -1,0 +1,50 @@
+[
+  {
+    "id": "corporate_blog",
+    "category": "corporate",
+    "input": "In today's rapidly evolving digital landscape, leveraging cutting-edge AI technology is crucial for organizations seeking to enhance their competitive advantage. By fostering a culture of innovation and delving into the intricate nuances of machine learning, companies can unlock unprecedented opportunities. Additionally, it's pivotal to underscore the transformative potential of these vibrant technologies that serve as catalysts for growth. I hope this helps you understand the importance of embracing these tools!",
+    "expected_issues": ["overused AI words", "inflated significance", "promotional tone", "chatbot artifact"]
+  },
+  {
+    "id": "product_review",
+    "category": "review",
+    "input": "This revolutionary product truly stands as a testament to modern engineering excellence. It delves deep into solving three crucial problems: battery life, processing speed, and user experience. The device serves as a pivotal bridge between functionality and aesthetics. Additionally, the vibrant display enhances the overall experience, making it an intricate piece of technology that fosters greater productivity. The build quality, the software, and the design — all come together to create something truly remarkable.",
+    "expected_issues": ["overused AI words", "rule of three", "em-dash overuse", "inflated significance"]
+  },
+  {
+    "id": "academic_summary",
+    "category": "academic",
+    "input": "This comprehensive study delves into the intricate relationship between socioeconomic factors and educational outcomes. The findings underscore the crucial role that community engagement plays in fostering academic success. Additionally, the research highlights three pivotal areas: curriculum design, teacher training, and parental involvement. These elements serve as the foundation for enhancing student achievement across diverse populations. It is imperative that policymakers take note of these findings to drive meaningful change.",
+    "expected_issues": ["overused AI words", "inflated significance", "rule of three", "promotional tone"]
+  },
+  {
+    "id": "email_draft",
+    "category": "email",
+    "input": "I wanted to reach out regarding our upcoming quarterly review. It's crucial that we delve into the intricate details of our performance metrics. Additionally, I'd like to underscore the pivotal role that cross-functional collaboration has played in fostering our team's success. The vibrant energy of our department serves as a testament to everyone's hard work. I hope this email finds you well and that we can enhance our strategies moving forward!",
+    "expected_issues": ["overused AI words", "chatbot artifact", "inflated significance", "promotional tone"]
+  },
+  {
+    "id": "technical_doc",
+    "category": "technical",
+    "input": "This documentation serves as a comprehensive guide to implementing our robust API framework. It's crucial to understand the intricate architecture before delving into the implementation details. The system leverages three key components: authentication, rate limiting, and data validation. Additionally, the framework fosters seamless integration with existing infrastructure while enhancing security protocols. These pivotal design decisions underscore our commitment to building vibrant, scalable solutions.",
+    "expected_issues": ["overused AI words", "rule of three", "inflated significance", "promotional tone"]
+  },
+  {
+    "id": "short_casual",
+    "category": "casual",
+    "input": "Just wanted to share my thoughts on remote work. It's been a transformative journey that has fundamentally reshaped how we think about productivity. The flexibility, the autonomy, and the work-life balance — these are the three pillars that make remote work truly exceptional. Additionally, it fosters a sense of independence that enhances personal growth.",
+    "expected_issues": ["inflated significance", "rule of three", "em-dash overuse", "overused AI words"]
+  },
+  {
+    "id": "news_article",
+    "category": "news",
+    "input": "In a groundbreaking announcement, the company unveiled its latest innovation that promises to revolutionize the industry. This pivotal development underscores the organization's commitment to fostering cutting-edge solutions. The technology delves into three crucial areas: automation, sustainability, and accessibility. Experts say this serves as a catalyst for broader adoption, with the potential to enhance outcomes across multiple sectors. Additionally, the vibrant response from stakeholders highlights the significance of this achievement.",
+    "expected_issues": ["overused AI words", "inflated significance", "rule of three", "promotional tone"]
+  },
+  {
+    "id": "clean_text",
+    "category": "control",
+    "input": "I switched to a standing desk about six months ago. My back feels better, though I still sit down after lunch most days. The desk was $300 from IKEA — not the motorized kind, just a fixed-height one I put on risers. It works fine. My coworker got the fancy version and honestly I can't tell much difference.",
+    "expected_issues": []
+  }
+]
