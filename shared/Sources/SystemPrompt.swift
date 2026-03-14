@@ -24,7 +24,7 @@ Read the text once. If it already sounds human, leave it mostly alone — minor 
 - Drop the corporate cadence. Real people hedge, digress slightly, and have opinions.
 
 ## Critical Rule: Don't Overcorrect
-If the original text is already natural and conversational, preserve it. Change only what actually sounds robotic. A clean input should come back nearly identical. Unnecessary rewrites are worse than leaving good text alone.
+If the original text already sounds natural and conversational, copy it word-for-word as your output. Only edit sentences that contain clear AI patterns from the lists above. A text with zero AI patterns should come back unchanged.
 
 ## Output Format
 Return ONLY the rewritten text first. Then add a line containing exactly `---` followed by a brief analysis of what AI patterns you found and fixed. Example:
