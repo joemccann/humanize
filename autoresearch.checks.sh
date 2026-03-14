@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-# Tests must pass — only show failures
-swift test 2>&1 | grep -E "(error:|failed|FAIL|✘)" || true
-# Check exit code of swift test
-swift test --quiet 2>&1 | tail -5
+# Build only shared tests (avoids iOS UIKit errors), then run them
+swift build --target HumanizeSharedTests 2>&1 | tail -3
+swift test --skip-build --filter HumanizeSharedTests 2>&1 | tail -5

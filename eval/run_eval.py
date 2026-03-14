@@ -5,6 +5,8 @@ Sends test samples through the system prompt via Cerebras,
 then judges output quality via OpenAI. Outputs METRIC lines.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -12,14 +14,15 @@ import sys
 import urllib.request
 import urllib.error
 from pathlib import Path
+from typing import Optional, Dict
 
 SCRIPT_DIR = Path(__file__).parent
 SAMPLES_FILE = SCRIPT_DIR / "samples.json"
 JUDGE_PROMPT_FILE = SCRIPT_DIR / "judge_prompt.txt"
 SYSTEM_PROMPT_FILE = SCRIPT_DIR / ".." / "shared" / "Sources" / "SystemPrompt.swift"
 
-CEREBRAS_KEY = os.environ.get("CEREBRAS_API_KEY", "")
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
+ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 # AI words to check independently (deterministic scoring component)
 AI_WORDS = [
@@ -59,44 +62,18 @@ def api_call(url: str, headers: dict, body: dict, timeout: int = 45) -> dict:
 
 
 def humanize_text(system_prompt: str, input_text: str) -> str | None:
-    """Send text through the humanization prompt via Cerebras."""
+    """Send text through the humanization prompt via OpenAI (gpt-4o-mini for speed/cost)."""
     user_msg = (
         f'Rewrite this text:\n\n{input_text}\n\n'
         f'Options:\n{{"tone": "natural", "preserveMeaning": true}}'
     )
     body = {
-        "model": "zai-glm-4.7",
-        "stream": False,
+        "model": "gpt-4o-mini",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_msg},
         ],
-        "temperature": 0.3,
-        "top_p": 1,
         "max_completion_tokens": 1024,
-    }
-    headers = {
-        "Authorization": f"Bearer {CEREBRAS_KEY}",
-        "Content-Type": "application/json",
-    }
-    try:
-        resp = api_call("https://api.cerebras.ai/v1/chat/completions", headers, body)
-        return resp["choices"][0]["message"]["content"]
-    except Exception:
-        return None
-
-
-def judge_quality(original: str, rewritten: str, judge_prompt: str) -> dict | None:
-    """Judge rewrite quality via OpenAI."""
-    user_msg = f"ORIGINAL:\n{original}\n\nREWRITTEN:\n{rewritten}"
-    body = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "system", "content": judge_prompt},
-            {"role": "user", "content": user_msg},
-        ],
-        "max_completion_tokens": 512,
-        "response_format": {"type": "json_object"},
     }
     headers = {
         "Authorization": f"Bearer {OPENAI_KEY}",
@@ -104,8 +81,42 @@ def judge_quality(original: str, rewritten: str, judge_prompt: str) -> dict | No
     }
     try:
         resp = api_call("https://api.openai.com/v1/chat/completions", headers, body)
-        content = resp["choices"][0]["message"]["content"]
-        scores = json.loads(content)
+        return resp["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+
+
+def judge_quality(original: str, rewritten: str, judge_prompt: str) -> dict | None:
+    """Judge rewrite quality via Anthropic (avoids same-model bias)."""
+    user_msg = f"ORIGINAL:\n{original}\n\nREWRITTEN:\n{rewritten}"
+    body = {
+        "model": "claude-sonnet-4-20250514",
+        "system": judge_prompt,
+        "messages": [
+            {"role": "user", "content": user_msg},
+        ],
+        "max_tokens": 512,
+    }
+    headers = {
+        "x-api-key": ANTHROPIC_KEY,
+        "Content-Type": "application/json",
+        "anthropic-version": "2023-06-01",
+    }
+    try:
+        resp = api_call("https://api.anthropic.com/v1/messages", headers, body, timeout=60)
+        # Anthropic returns content as array of blocks
+        content_blocks = resp.get("content", [])
+        text_block = next((b for b in content_blocks if b.get("type") == "text"), None)
+        if not text_block:
+            print("  No text block in Anthropic response", file=sys.stderr)
+            return None
+        raw_content = text_block["text"]
+        # Extract JSON from response (might be wrapped in markdown code block)
+        json_match = re.search(r'\{[^{}]*\}', raw_content, re.DOTALL)
+        if not json_match:
+            print(f"  No JSON found in judge response: {raw_content[:200]}", file=sys.stderr)
+            return None
+        scores = json.loads(json_match.group())
         required = [
             "overall", "naturalness", "ai_word_avoidance", "meaning_preservation",
             "rhythm_variety", "personality", "artifact_removal", "format_compliance",
@@ -116,7 +127,8 @@ def judge_quality(original: str, rewritten: str, judge_prompt: str) -> dict | No
                 print(f"  Invalid score: {k}={scores.get(k)}", file=sys.stderr)
                 return None
         return scores
-    except Exception:
+    except Exception as e:
+        print(f"  Judge error: {e}", file=sys.stderr)
         return None
 
 
@@ -127,11 +139,11 @@ def count_ai_words(text: str) -> int:
 
 
 def main():
-    if not CEREBRAS_KEY:
-        print("ERROR: CEREBRAS_API_KEY not set", file=sys.stderr)
-        sys.exit(1)
     if not OPENAI_KEY:
         print("ERROR: OPENAI_API_KEY not set", file=sys.stderr)
+        sys.exit(1)
+    if not ANTHROPIC_KEY:
+        print("ERROR: ANTHROPIC_API_KEY not set", file=sys.stderr)
         sys.exit(1)
 
     system_prompt = extract_system_prompt()
