@@ -64,15 +64,11 @@ Then open `HumanizeMobile/HumanizeMobile.xcodeproj` in Xcode and build the `Huma
 swift test
 ```
 
-163 tests across 18 suites covering types, settings persistence, API service (request building, response parsing, error handling), fallback behavior, whitespace normalization, structured response parsing, multi-provider integration, and UI view instantiation.
+212 tests across 29 suites covering types, settings persistence, API service (request building, response parsing, error handling, request timeouts), fallback behavior, whitespace normalization, structured response parsing, HumanizeController (orchestration, task cancellation, clipboard integration), error messaging, model cache invalidation, multi-provider integration, and UI view instantiation.
 
 ### iOS (Xcode)
 
 Build and run the `HumanizeMobileTests` scheme in Xcode targeting an iOS simulator.
-
-41 tests across 7 suites covering app launch, theme tokens, view instantiation, settings, clipboard, ViewModel (analysis state, clear, error mapping), and mobile flow integration.
-
-**Total: 204 tests across 25 suites.**
 
 ## Generate app icon assets
 
@@ -189,7 +185,9 @@ shared/
   ├── AppAppearance.swift                # AppAppearance + #if os(macOS) resolvedColorScheme
   ├── HTTPClient.swift                   # Async networking protocol
   ├── SystemPrompt.swift                 # Embedded rewrite prompt
-  ├── HumanizeAPIService.swift           # Provider request orchestration
+  ├── HumanizeAPIService.swift           # Provider request orchestration (with 30s timeout, model cache TTL)
+  ├── HumanizeController.swift           # @Observable shared orchestration (provider-attempt loop, status, clipboard)
+  ├── Clipboard.swift                    # Cross-platform ClipboardProvider protocol
   ├── SettingsStore.swift                # @Observable persistence via UserDefaults
   └── TextUtilities.swift               # normalizeInputWhitespace, formatLatencySeconds, parseHumanizeResponse, formatAnalysisForDisplay
   Tests/
