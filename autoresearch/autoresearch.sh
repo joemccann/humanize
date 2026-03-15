@@ -9,4 +9,5 @@ if [ ${PIPESTATUS[0]} -ne 0 ]; then
 fi
 
 # Run evaluation
-python3 eval/run_eval.py
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+python3 "$SCRIPT_DIR/eval/run_eval.py"

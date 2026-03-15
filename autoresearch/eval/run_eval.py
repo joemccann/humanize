@@ -20,7 +20,7 @@ from typing import Optional, Dict, List
 SCRIPT_DIR = Path(__file__).parent
 SAMPLES_FILE = SCRIPT_DIR / "samples.json"
 JUDGE_PROMPT_FILE = SCRIPT_DIR / "judge_prompt.txt"
-SYSTEM_PROMPT_FILE = SCRIPT_DIR / ".." / "shared" / "Sources" / "SystemPrompt.swift"
+SYSTEM_PROMPT_FILE = SCRIPT_DIR / ".." / ".." / "shared" / "Sources" / "SystemPrompt.swift"
 
 OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
