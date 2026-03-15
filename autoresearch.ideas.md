@@ -1,20 +1,37 @@
-# Autoresearch Ideas: Prompt Quality
+# Autoresearch Ideas: Prompt Quality — Final Status
 
-## Observations
-- The "How to Think" section with explicit "leave it alone if clean" guidance is CRITICAL for overcorrection prevention
-- The expanded buzzword list matters for consistency (v7 stabilized product review)
-- Voice & Rhythm section with texture/hedging guidance helps naturalness
-- Personality scores cap around 6-7 for formal genres (corporate, technical, news) — may be a genre constraint, not a prompt issue
-- Self-check / litmus test sections hurt by encouraging overthinking
-- Before/after examples slightly hurt — may distract from instructions
-- Simplified prompts lose important guidance and regress
+## Result
+- **54 experiments** completed over 2 sessions
+- **Best prompt**: v36 at commit 2904c76
+- **Score**: peak 8.48, average ~8.36 (from 4 baseline runs: 8.48, 8.36, 8.37, 8.21)
+- **Improvement**: 7.38 → 8.48 peak = **+14.9%** from original baseline
+- **Key metrics**: naturalness 8.25, ai_word_avoidance 9.26, personality 7.38, rhythm 7.15
 
-## Ideas to Try
-- Add tone-specific guidance (the app sends tone as "natural", "casual", or "professional" — leverage this in the prompt)
-- Add instruction to vary the OPENING of the rewrite (AI rewrites often start the same way as the input)
-- Try "negative examples" — show what NOT to do rather than what to do
-- Add specific rhythm pattern: "At least one sentence under 6 words per paragraph"
-- Try a stronger "Don't Overcorrect" section with an explicit trigger ("If you find fewer than 3 AI tells, change less than 20% of the text")
-- Try making the prompt address the model as "you" more directly throughout
-- Add instruction about paragraph flow and transitions (real writers use "anyway", "so", "the point is")
-- Try emphasizing that the ANALYSIS section should be honest — if text was mostly clean, say so
+## What worked (in order of impact)
+1. **"Vary dramatically, contrast matters"** rhythm instruction (+0.21 overall)
+2. **Tiered rewrite strategy** (3+/1-2/0 patterns) — foundational architecture
+3. **Chatbot closer deletion + AI-word-free analysis** — boosted ai_word_avoidance
+4. **Expanded buzzword blacklist** (30+ words) — consistency on all samples
+5. **Opening variation + natural transitions** ("anyway"/"so" not "additionally")
+6. **Texture/hedging guidance** ("mostly", "kind of", parenthetical asides)
+
+## What didn't work (tried extensively)
+- Self-check / final check sections (model overthinks)
+- Before/after examples (distract from instructions)
+- Genre-aware personality (makes formal genres too cautious)
+- "Surgery not rewrite" framing (kills personality)
+- Persona-style prompt rewrites (AI word removal collapses)
+- Prompt shortening below ~2.5KB (loses important guidance)
+- ALL-CAPS section labels (feel corporate to model)
+- "Rough edges" instructions (boost rhythm but crash clean text overcorrection)
+- Stronger overcorrection phrasing (neutral at best)
+- Multiple tiers beyond 3 (confuses model)
+
+## Plateau analysis
+The prompt is at a local optimum for gpt-4o-mini. The remaining variance (8.21-8.48) is dominated by:
+1. **LLM generation randomness** — same prompt produces different outputs
+2. **LLM judge randomness** — same output can receive different scores  
+3. **Personality vs overcorrection tension** — more creative instructions help AI-heavy text but hurt clean text
+4. **gpt-4o-mini clean text limitation** — model can't reliably pass through unchanged text
+
+Further improvement would require changes to the evaluation setup (off-limits) or a fundamentally different prompting paradigm.
