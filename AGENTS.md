@@ -33,10 +33,9 @@ Runtime behavior:
 ## Validation policy
 
 - `swift build` must compile with zero errors and zero warnings.
-- `swift test` must pass all shared + macOS tests (163 tests, 18 suites) before any merge.
-- `xcodebuild test` with `HumanizeMobileTests` scheme must pass all iOS tests (41 tests, 7 suites).
+- `swift test` must pass all shared + macOS + launcher tests (212 tests, 29 suites) before any merge.
+- `xcodebuild test` with `HumanizeMobileTests` scheme must pass all iOS tests.
 - `bash scripts/build-app.sh` must produce a signed `.app` bundle.
-- Total: 204 tests across 25 suites.
 
 ## Process
 
@@ -55,6 +54,8 @@ Runtime behavior:
 | `shared/Sources/SettingsStore.swift` | Persisted user preferences |
 | `shared/Sources/SystemPrompt.swift` | Embedded rewrite prompt |
 | `shared/Sources/TextUtilities.swift` | Text normalization, formatting, response parsing, analysis display |
+| `shared/Sources/HumanizeController.swift` | Shared @Observable orchestration (provider-attempt loop, status, clipboard) |
+| `shared/Sources/Clipboard.swift` | Cross-platform ClipboardProvider protocol |
 | `shared/Sources/AppAppearance.swift` | Appearance enum with macOS resolver |
 | `macos/Sources/HumanizeBarApp.swift` | macOS app entry point |
 | `macos/Sources/AppDelegate.swift` | Menu bar status item + popover |

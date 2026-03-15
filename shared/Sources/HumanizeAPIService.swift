@@ -6,9 +6,15 @@ public struct HumanizeAPIService: Sendable {
     private static let openAIFallbackModel = "gpt-4o-mini"
     private static let anthropicFallbackModel = "claude-3-haiku-20240307"
     private static let modelCache = ModelCandidateCache()
+    public static let defaultTimeoutSeconds: TimeInterval = 30
 
     public init(httpClient: HTTPClient = URLSession.shared) {
         self.httpClient = httpClient
+    }
+
+    /// Invalidate cached model candidates, e.g. when API keys change.
+    public func invalidateModelCache() async {
+        await Self.modelCache.invalidateAll()
     }
 
     public func humanize(
@@ -98,6 +104,7 @@ public struct HumanizeAPIService: Sendable {
     private static func buildCerebrasRequest(apiKey: String, userMessage: String, model: String) -> URLRequest {
         var request = URLRequest(url: URL(string: "https://api.cerebras.ai/v1/chat/completions")!)
         request.httpMethod = "POST"
+        request.timeoutInterval = defaultTimeoutSeconds
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
@@ -121,6 +128,7 @@ public struct HumanizeAPIService: Sendable {
     private static func buildOpenAIRequest(apiKey: String, userMessage: String, model: String) -> URLRequest {
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
         request.httpMethod = "POST"
+        request.timeoutInterval = defaultTimeoutSeconds
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
@@ -141,6 +149,7 @@ public struct HumanizeAPIService: Sendable {
     private static func buildAnthropicRequest(apiKey: String, userMessage: String, model: String) -> URLRequest {
         var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
         request.httpMethod = "POST"
+        request.timeoutInterval = defaultTimeoutSeconds
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -405,13 +414,33 @@ public struct HumanizeAPIService: Sendable {
 }
 
 private actor ModelCandidateCache {
-    private var values: [String: [String]] = [:]
+    private struct Entry {
+        let models: [String]
+        let timestamp: ContinuousClock.Instant
+    }
+
+    private var values: [String: Entry] = [:]
+    static let ttl: Duration = .seconds(3600)
 
     func get(_ key: String) -> [String]? {
-        values[key]
+        guard let entry = values[key] else { return nil }
+        let elapsed = entry.timestamp.duration(to: .now)
+        if elapsed > Self.ttl {
+            values[key] = nil
+            return nil
+        }
+        return entry.models
     }
 
     func set(_ key: String, value: [String]) {
-        values[key] = value
+        values[key] = Entry(models: value, timestamp: .now)
+    }
+
+    func invalidate(_ key: String) {
+        values[key] = nil
+    }
+
+    func invalidateAll() {
+        values.removeAll()
     }
 }

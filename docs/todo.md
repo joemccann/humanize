@@ -263,9 +263,32 @@
   - Analysis rendered as rich markdown via `AttributedString`; `formatAnalysisForDisplay()` converts dashes to `•` bullets with spacing
   - iOS app icon added via `Assets.xcassets` using shared `Resources/AppIcon-1024.png` source
 
+- [x] T16: Architecture refactor — shared HumanizeController, unified error messages, model cache TTL, request timeout, task cancellation, clipboard protocol (212 tests, 29 suites)
+  - Extracted `HumanizeController` (@Observable) as shared orchestration layer — eliminates ~100 lines of duplicated provider-attempt logic between macOS PopoverView and iOS HumanizeViewModel
+  - Added `userFacingDescription` and `isCritical` computed properties to `HumanizeError` — deleted 3 separate error mapping functions
+  - Added 30s request timeout to all provider request builders (Cerebras, OpenAI, Anthropic)
+  - Added TTL (1 hour) to `ModelCandidateCache` with `invalidateModelCache()` for key changes
+  - Fixed task cancellation: `clear()` and new `humanize()` calls cancel in-flight requests; tasks check `Task.isCancelled` before populating results
+  - Fixed `MockHTTPClient` to be properly `Sendable` (removed `@unchecked`)
+  - Added `ClipboardProvider` protocol in HumanizeShared for cross-platform clipboard abstraction
+  - iOS `HumanizeViewModel` now delegates to `HumanizeController` instead of reimplementing orchestration
+  - macOS `PopoverView` now uses `HumanizeController` instead of inline Task + local state
+  - Launcher `PanelManager` now checks `Task.isCancelled` in provider loop
+  - Fixed Package.swift: iOS targets conditionally included only on iOS to unblock `swift test` on macOS
+  - Fixed pre-existing `SystemPromptTests` assertion mismatch ("Avoid overused AI words" → "Buzzword soup")
+  - Verification:
+    - `swift build` — zero errors, zero warnings
+    - `swift test` — 212 tests, 29 suites, 0 failures
+    - `bash scripts/build-app.sh` — signed .app bundle produced
+
 ## Up next
 
-- [ ] Keyboard shortcut (global hotkey) to toggle popover
+- [ ] Streaming response display (SSE parsing for word-by-word output)
+- [ ] Undo/redo and edit history (last N humanizations)
+- [ ] Diff view for changes (inline word-level diff)
+- [ ] Keychain storage for API keys (replace UserDefaults plaintext)
+- [ ] Codable request/response structs (replace JSONSerialization dictionaries)
+- [ ] Extract PopoverView sub-views (InputCardView, OutputCardView, StatusBadgeView)
 - [ ] Sparkle or manual update mechanism
 - [ ] Clipboard watch mode (auto-detect paste, offer to humanize)
 - [ ] iOS App Store submission preparation (icons, screenshots, metadata)

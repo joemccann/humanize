@@ -77,6 +77,7 @@ final class PanelManager {
         let attemptOrder = settingsStore.providerAttemptOrder
 
         for provider in attemptOrder {
+            if Task.isCancelled { break }
             guard let apiKey = settingsStore.apiKey(for: provider) else { continue }
 
             do {
@@ -87,7 +88,8 @@ final class PanelManager {
                     apiKey: apiKey
                 )
 
-                // Copy result to clipboard
+                guard !Task.isCancelled else { return }
+
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(result.text, forType: .string)
 

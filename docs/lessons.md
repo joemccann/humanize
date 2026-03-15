@@ -51,7 +51,19 @@
 - Production publish scripts should fail fast when required signing/notarization inputs are missing.
 - Include explicit bundle assertions in validation (icon exists in app resources, plist icon key set).
 
-## LLM Integration
+## Architecture Refactoring
+
+- When two platforms duplicate the same orchestration flow (provider-attempt loop, result formatting, clipboard copy), extract an `@Observable` controller in the shared library. Both platforms delegate to it instead of reimplementing the logic.
+- Error-to-user-message mapping belongs on the error type itself (`userFacingDescription`), not scattered across views and view models.
+- Model caches should have a TTL and an explicit `invalidate()` method. Without TTL, stale entries persist until app restart when providers update models or users change keys.
+- Always set explicit `timeoutInterval` on `URLRequest` for API calls. Without it, a hanging provider shows an infinite spinner with no user recourse.
+- When spawning `Task` from `@MainActor` views, always store the task handle and cancel it on `clear()`, dismiss, or when starting a new request. Otherwise, late-arriving results overwrite the user's current state.
+- Use `Task.isCancelled` checks before mutating shared state in async provider loops. This prevents a cancelled task from populating results after the user has moved on.
+- SPM `#if os(iOS)` in Package.swift conditionally includes iOS targets that depend on UIKit, preventing `swift test` from failing on macOS where UIKit is unavailable.
+- `@unchecked Sendable` on immutable structs with `@Sendable` closures is unnecessary — the struct is already properly Sendable.
+- For `@MainActor` async tests, use `.serialized` trait and a polling `waitUntil` helper instead of fixed `Task.sleep` durations. Parallel test execution causes main actor contention that makes fixed delays unreliable.
+
+
 
 - Context management matters most for local models; lite prompts reduce truncation risk.
 - Explicit error mapping for 401/413/429/500/502 improves user trust versus generic failures.

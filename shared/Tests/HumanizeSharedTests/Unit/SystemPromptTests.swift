@@ -22,7 +22,7 @@ struct SystemPromptTests {
 
     @Test("Prompt contains key rules")
     func keyRules() {
-        #expect(humanizeSystemPrompt.contains("Avoid overused AI words"))
+        #expect(humanizeSystemPrompt.contains("Buzzword soup"))
         #expect(humanizeSystemPrompt.contains("Vary sentence length"))
     }
 }

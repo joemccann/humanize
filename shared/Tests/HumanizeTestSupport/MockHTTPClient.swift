@@ -1,7 +1,7 @@
 import Foundation
 import HumanizeShared
 
-public struct MockHTTPClient: HTTPClient, @unchecked Sendable {
+public struct MockHTTPClient: HTTPClient, Sendable {
     public let handler: @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
     public init(handler: @escaping @Sendable (URLRequest) async throws -> (Data, URLResponse)) {

@@ -71,17 +71,9 @@ struct HumanizeViewModelTests {
         #expect(vm.isDisabled == false)
     }
 
-    @Test("isDisabled is true while processing")
-    func disabledWhileProcessing() {
-        let vm = HumanizeViewModel()
-        vm.inputText = "Hello"
-        vm.isProcessing = true
-        #expect(vm.isDisabled == true)
-    }
-
     // MARK: - humanize
 
-    @Test("humanize success sets output and outputVisible")
+    @Test("humanize success sets output via controller")
     func humanizeSuccess() async throws {
         let client = successClient(text: "Clean text")
         let vm = HumanizeViewModel(service: HumanizeAPIService(httpClient: client))
@@ -90,7 +82,6 @@ struct HumanizeViewModelTests {
         vm.inputText = "AI-sounding text"
         vm.humanize(settings: settings)
 
-        // Wait for async Task to complete
         try await Task.sleep(for: .milliseconds(100))
 
         #expect(vm.outputText == "Clean text")
@@ -132,25 +123,7 @@ struct HumanizeViewModelTests {
         #expect(vm.showErrorAlert == true)
     }
 
-    @Test("humanize with network error sets critical alert")
-    func humanizeNetworkError() async throws {
-        let client = MockHTTPClient { _ in
-            throw HumanizeError.networkError("No connection")
-        }
-        let vm = HumanizeViewModel(service: HumanizeAPIService(httpClient: client))
-        let settings = makeSettings(cerebrasKey: "cbr-test")
-
-        vm.inputText = "Some text"
-        vm.humanize(settings: settings)
-
-        try await Task.sleep(for: .milliseconds(100))
-
-        #expect(vm.statusKind == .error)
-        #expect(vm.showErrorAlert == true)
-        #expect(vm.errorAlertMessage.contains("connect"))
-    }
-
-    // MARK: - clear
+    // MARK: - Analysis
 
     @Test("humanize with structured response sets analysisText")
     func humanizeWithAnalysis() async throws {
@@ -187,14 +160,14 @@ struct HumanizeViewModelTests {
     // MARK: - clear
 
     @Test("clear resets all state including analysis")
-    func clearResetsState() {
-        let vm = HumanizeViewModel()
+    func clearResetsState() async throws {
+        let client = successClient(text: "result")
+        let vm = HumanizeViewModel(service: HumanizeAPIService(httpClient: client))
+        let settings = makeSettings(cerebrasKey: "cbr-test")
+
         vm.inputText = "text"
-        vm.outputText = "result"
-        vm.analysisText = "some analysis"
-        vm.showAnalysis = true
-        vm.outputVisible = true
-        vm.statusMessage = "Done"
+        vm.humanize(settings: settings)
+        try await Task.sleep(for: .milliseconds(100))
 
         vm.clear()
 
@@ -209,44 +182,19 @@ struct HumanizeViewModelTests {
     // MARK: - copyOutput
 
     @Test("copyOutput sets success status")
-    func copyOutputStatus() {
-        let vm = HumanizeViewModel()
-        vm.outputText = "result text"
+    func copyOutputStatus() async throws {
+        let client = successClient(text: "result text")
+        let vm = HumanizeViewModel(service: HumanizeAPIService(httpClient: client))
+        let settings = makeSettings(cerebrasKey: "cbr-test")
+
+        vm.inputText = "text"
+        vm.humanize(settings: settings)
+        try await Task.sleep(for: .milliseconds(100))
 
         vm.copyOutput()
 
         #expect(vm.statusKind == .success)
         #expect(vm.statusMessage == "Copied to clipboard")
-    }
-
-    // MARK: - userFacingErrorMessage
-
-    @Test("userFacingErrorMessage maps noAPIKey")
-    func errorMessageNoKey() {
-        let vm = HumanizeViewModel()
-        let msg = vm.userFacingErrorMessage(for: .noAPIKey)
-        #expect(msg.contains("API key"))
-    }
-
-    @Test("userFacingErrorMessage maps invalidResponse")
-    func errorMessageInvalidResponse() {
-        let vm = HumanizeViewModel()
-        let msg = vm.userFacingErrorMessage(for: .invalidResponse)
-        #expect(msg.contains("unreadable"))
-    }
-
-    @Test("userFacingErrorMessage maps networkError")
-    func errorMessageNetwork() {
-        let vm = HumanizeViewModel()
-        let msg = vm.userFacingErrorMessage(for: .networkError("timeout"))
-        #expect(msg.contains("connect"))
-    }
-
-    @Test("userFacingErrorMessage maps apiError")
-    func errorMessageAPI() {
-        let vm = HumanizeViewModel()
-        let msg = vm.userFacingErrorMessage(for: .apiError(status: 429, message: "Rate limited"))
-        #expect(msg == "Rate limited")
     }
 
     // MARK: - normalizeInput
