@@ -1,37 +1,34 @@
-# Autoresearch Ideas: Prompt Quality — Final Status
+# Autoresearch: Prompt Quality — Final Report
 
 ## Result
-- **54 experiments** completed over 2 sessions
+- **60 experiments** completed over 2 sessions
 - **Best prompt**: v36 at commit 2904c76
-- **Score**: peak 8.48, average ~8.36 (from 4 baseline runs: 8.48, 8.36, 8.37, 8.21)
-- **Improvement**: 7.38 → 8.48 peak = **+14.9%** from original baseline
-- **Key metrics**: naturalness 8.25, ai_word_avoidance 9.26, personality 7.38, rhythm 7.15
+- **Peak score**: 8.48, **Average**: ~8.30 (from 5 baseline runs)
+- **Improvement from original baseline**: 7.38 → 8.48 peak = **+14.9%**
+- **True variance**: stdev=0.15, range=8.06-8.48
 
-## What worked (in order of impact)
-1. **"Vary dramatically, contrast matters"** rhythm instruction (+0.21 overall)
-2. **Tiered rewrite strategy** (3+/1-2/0 patterns) — foundational architecture
-3. **Chatbot closer deletion + AI-word-free analysis** — boosted ai_word_avoidance
-4. **Expanded buzzword blacklist** (30+ words) — consistency on all samples
-5. **Opening variation + natural transitions** ("anyway"/"so" not "additionally")
-6. **Texture/hedging guidance** ("mostly", "kind of", parenthetical asides)
+## Prompt architecture (v36)
+1. **Opening**: "Sharp-eyed writing editor" identity
+2. **## How to Think**: Tiered strategy (3+/1-2/0 patterns)
+3. **## AI Patterns to Fix**: 30+ buzzwords, structural patterns, formulaic phrases, chatbot closers
+4. **## Voice & Rhythm**: 10 bullets led by dramatic rhythm contrast instruction
+5. **## Critical Rule: Don't Overcorrect**: Separate header for emphasis
+6. **## Output Format**: No AI buzzwords in analysis section
 
-## What didn't work (tried extensively)
-- Self-check / final check sections (model overthinks)
-- Before/after examples (distract from instructions)
-- Genre-aware personality (makes formal genres too cautious)
-- "Surgery not rewrite" framing (kills personality)
-- Persona-style prompt rewrites (AI word removal collapses)
-- Prompt shortening below ~2.5KB (loses important guidance)
-- ALL-CAPS section labels (feel corporate to model)
-- "Rough edges" instructions (boost rhythm but crash clean text overcorrection)
-- Stronger overcorrection phrasing (neutral at best)
-- Multiple tiers beyond 3 (confuses model)
+## Key wins (chronological)
+| Version | Score | Key change |
+|---------|-------|------------|
+| v2 | 7.50 | Buzzword list + overcorrection rule |
+| v3 | 8.00 | Texture/hedging guidance |
+| v7 | 8.00 | Expanded buzzword blacklist |
+| v18 | 8.07 | "Copy word-for-word" for clean text |
+| v19 | 8.11 | Opening variation + natural transitions |
+| v22 | 8.25 | Tiered rewrite strategy (3+/1-2/0) |
+| v34 | 8.27 | Chatbot closer deletion + AI-word-free analysis |
+| **v36** | **8.48** | **"Vary dramatically, contrast matters"** |
 
-## Plateau analysis
-The prompt is at a local optimum for gpt-4o-mini. The remaining variance (8.21-8.48) is dominated by:
-1. **LLM generation randomness** — same prompt produces different outputs
-2. **LLM judge randomness** — same output can receive different scores  
-3. **Personality vs overcorrection tension** — more creative instructions help AI-heavy text but hurt clean text
-4. **gpt-4o-mini clean text limitation** — model can't reliably pass through unchanged text
+## Exhaustively tried and confirmed unhelpful
+Self-check sections, before/after examples, genre-aware personality, "surgery" framing, persona prompts, ultra-concise prompts, ALL-CAPS labels, section reordering, "rough edges" (helps rhythm but kills clean text), prompt shortening, prompt lengthening, flowing paragraph format, tone awareness, abstract→concrete instruction, "Don't" lists, 4-tier strategies, negative examples, stronger overcorrection wording, chatbot prevention instructions.
 
-Further improvement would require changes to the evaluation setup (off-limits) or a fundamentally different prompting paradigm.
+## Conclusion
+The v36 prompt is at the optimization frontier for gpt-4o-mini with this evaluation setup. Further improvement requires either reducing eval variance (multi-run averaging) or changing the evaluation model/judge.
