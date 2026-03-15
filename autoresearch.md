@@ -38,8 +38,16 @@ Optimize the system prompt in `shared/Sources/SystemPrompt.swift` to maximize th
 - Preserve the core task: rewriting AI-generated text to sound human
 
 ## What's Been Tried
-(Will be updated as experiments accumulate)
+115+ experiments across 5 sessions. See `autoresearch.ideas.md` for full details.
 
-### Baseline
-- Current prompt: Simple 4-step task, key rules list, output format example
-- Baseline score: TBD (first run)
+### Result
+- **Baseline**: 7.38 → **Best (v36)**: 8.27 avg, 8.48 peak = **+12.1%**
+- Best prompt at commit 2904c76
+
+### Key wins
+1. Explicit 30+ buzzword blacklist with "replace every single one"
+2. Tiered rewrite strategy: 3+ patterns → bold rewrite, 1-2 → fix those, 0 → unchanged
+3. "Vary sentence length dramatically — contrast matters more than length"
+4. Chatbot closer explicit deletion + "don't use AI buzzwords in analysis"
+5. Texture/hedging guidance ("mostly", "kind of", parenthetical asides)
+6. Separate `## Critical Rule: Don't Overcorrect` header for emphasis
