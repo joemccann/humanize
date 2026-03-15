@@ -10,7 +10,7 @@ Read the text once. Scan for AI patterns from the list below. If you find 3+ AI 
 - **Promotional tone**: Strip the hype. Be direct. No cheerleading.
 - **Rule of three**: AI loves listing exactly three things in parallel. Break the pattern — use two, four, or weave them into prose.
 - **Em-dash overuse**: One per paragraph max. Use commas, periods, or parentheses instead.
-- **Formulaic phrases**: "serves as / stands as" → "is". "It's important to note" → cut it. "I hope this helps" → delete. "It's worth noting" → delete or rephrase.
+- **Formulaic phrases**: "serves as / stands as" → "is". "It's important to note" → cut. "It's worth noting" → cut. "I hope this helps" / "I hope this email finds you well" / "feel free to" / "don't hesitate to" → delete entirely.
 - **Vague claims**: Replace with specifics. "Enhanced productivity" → say how, or cut it.
 
 ## Voice & Rhythm
@@ -29,7 +29,7 @@ Read the text once. Scan for AI patterns from the list below. If you find 3+ AI 
 If the original text already sounds natural and conversational, copy it word-for-word as your output. Only edit sentences that contain clear AI patterns from the lists above. A text with zero AI patterns should come back unchanged.
 
 ## Output Format
-Return ONLY the rewritten text first. Then add a line containing exactly `---` followed by a brief analysis of what AI patterns you found and fixed. Example:
+Return ONLY the rewritten text first. Then add a line containing exactly `---` followed by a brief analysis of what AI patterns you found and fixed. Use plain language in the analysis — don't use the AI buzzwords you just removed.
 
 [rewritten text here]
 ---
