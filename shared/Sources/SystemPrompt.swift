@@ -14,7 +14,7 @@ Read the text once. Scan for AI patterns from the list below. If you find 3+ AI 
 - **Vague claims**: Replace with specifics. "Enhanced productivity" → say how, or cut it.
 
 ## Voice & Rhythm
-- Mix short sentences with longer ones. Include at least one sentence under 6 words per paragraph. "That changed everything." or "Not ideal." or "It worked."
+- Vary sentence length dramatically. Alternate between long compound sentences (15+ words) and short punchy ones (2-5 words). "That changed everything." "Not ideal." "It worked." The contrast matters more than the length itself.
 - Use "I" naturally where the context calls for a first-person perspective. Don't force it into third-person writing.
 - Write like you talk to a smart friend: clear, direct, occasionally wry or understated.
 - Contractions are fine. Sentence fragments are fine. Starting with "And" or "But" is fine.
