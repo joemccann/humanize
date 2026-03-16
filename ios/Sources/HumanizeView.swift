@@ -45,7 +45,7 @@ struct HumanizeView: View {
         } message: {
             Text(viewModel.errorAlertMessage)
         }
-        .sensoryFeedback(.success, trigger: viewModel.outputVisible) { old, new in
+        .sensoryFeedback(.success, trigger: viewModel.controller.outputVisible) { old, new in
             !old && new
         }
         .preferredColorScheme(settings.appearance.colorScheme)
@@ -211,13 +211,13 @@ struct HumanizeView: View {
                         .shadow(color: .black.opacity(0.03), radius: 4, y: 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .opacity(viewModel.outputVisible ? 1 : 0)
-                .offset(y: viewModel.outputVisible ? 0 : 8)
-                .animation(.easeOut(duration: 0.35), value: viewModel.outputVisible)
+                .opacity(viewModel.controller.outputVisible ? 1 : 0)
+                .offset(y: viewModel.controller.outputVisible ? 0 : 8)
+                .animation(.easeOut(duration: 0.35), value: viewModel.controller.outputVisible)
 
             actionButtonsRow
-                .opacity(viewModel.outputVisible ? 1 : 0)
-                .animation(.easeOut(duration: 0.35), value: viewModel.outputVisible)
+                .opacity(viewModel.controller.outputVisible ? 1 : 0)
+                .animation(.easeOut(duration: 0.35), value: viewModel.controller.outputVisible)
         }
 
         // Status badge

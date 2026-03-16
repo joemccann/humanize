@@ -83,27 +83,22 @@ private enum Theme {
 // MARK: - Popover
 
 struct PopoverView: View {
-    private enum StatusKind {
-        case success
-        case error
-    }
-
     @Environment(SettingsStore.self) private var settings
     @State private var inputText = ""
-    @State private var outputText = ""
-    @State private var analysisText: String?
     @State private var showAnalysis = false
-    @State private var statusMessage = ""
-    @State private var statusKind: StatusKind = .success
-    @State private var isProcessing = false
     @State private var showSettings = false
+    @State private var controller: HumanizeController
 
     let onResize: ((CGSize, Bool) -> Void)?
 
-    private let service = HumanizeAPIService()
-
     init(onResize: ((CGSize, Bool) -> Void)? = nil) {
         self.onResize = onResize
+        _controller = State(initialValue: HumanizeController(
+            onCopyToClipboard: { text in
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
+            }
+        ))
     }
 
     var body: some View {
@@ -123,7 +118,7 @@ struct PopoverView: View {
                 } else if !settings.hasRequiredAPIKey {
                     setupView
                 } else {
-                    mainView
+                    mainContent
                 }
             }
             .padding(16)
@@ -419,7 +414,7 @@ struct PopoverView: View {
     // MARK: - Main view
 
     @ViewBuilder
-    private var mainView: some View {
+    private var mainContent: some View {
         // Input card
         TextEditor(text: $inputText)
             .font(.system(size: 13))
@@ -447,7 +442,7 @@ struct PopoverView: View {
                     .stroke(Theme.cardRing, lineWidth: 1)
             )
             .onChange(of: inputText) { _, newValue in
-                let cleaned = normalizeWhitespace(newValue)
+                let cleaned = normalizeInputWhitespace(newValue)
                 if cleaned != newValue {
                     inputText = cleaned
                 }
@@ -482,10 +477,12 @@ struct PopoverView: View {
 
             Spacer()
 
-            // Humanize button — compact, less opaque
-            Button(action: humanize) {
+            // Humanize button
+            Button {
+                controller.humanize(input: inputText, settings: settings)
+            } label: {
                 Group {
-                    if isProcessing {
+                    if controller.isProcessing {
                         ProgressView()
                             .controlSize(.small)
                             .tint(.white)
@@ -508,8 +505,8 @@ struct PopoverView: View {
         }
 
         // Output card
-        if !outputText.isEmpty {
-            TextEditor(text: .constant(outputText))
+        if controller.hasOutput {
+            TextEditor(text: .constant(controller.outputText))
                 .font(.system(size: 13))
                 .lineSpacing(2)
                 .frame(minHeight: 110)
@@ -525,8 +522,7 @@ struct PopoverView: View {
 
             HStack(spacing: 8) {
                 Button {
-                    copyToClipboard(outputText)
-                    statusMessage = "Copied to clipboard"
+                    controller.copyOutput()
                 } label: {
                     Label("Copy", systemImage: "doc.on.doc")
                         .font(.system(size: 11, weight: .semibold))
@@ -541,7 +537,7 @@ struct PopoverView: View {
                 }
                 .buttonStyle(.plain)
 
-                if analysisText != nil {
+                if controller.hasAnalysis {
                     Button {
                         showAnalysis.toggle()
                     } label: {
@@ -572,10 +568,8 @@ struct PopoverView: View {
 
                 Button {
                     inputText = ""
-                    outputText = ""
-                    analysisText = nil
                     showAnalysis = false
-                    clearStatus()
+                    controller.clear()
                 } label: {
                     Label("Clear", systemImage: "xmark")
                         .font(.system(size: 11, weight: .semibold))
@@ -595,14 +589,14 @@ struct PopoverView: View {
         }
 
         // Status badge
-        if !statusMessage.isEmpty {
+        if controller.hasStatus {
             HStack(spacing: 6) {
-                Image(systemName: statusKind == .error ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                Image(systemName: controller.statusKind == .error ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                     .font(.system(size: 10))
-                    .foregroundStyle(statusKind == .error ? .red : .green)
-                Text(statusMessage)
+                    .foregroundStyle(controller.statusKind == .error ? .red : .green)
+                Text(controller.statusMessage)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(statusKind == .error ? .red.opacity(0.85) : Theme.textSecondary)
+                    .foregroundStyle(controller.statusKind == .error ? .red.opacity(0.85) : Theme.textSecondary)
                     .lineLimit(2)
                     .truncationMode(.tail)
             }
@@ -611,8 +605,8 @@ struct PopoverView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(statusKind == .error ? Color.red.opacity(0.08) : Theme.pillBg)
-                    .stroke(statusKind == .error ? Color.red.opacity(0.22) : Theme.pillBorder, lineWidth: 1)
+                    .fill(controller.statusKind == .error ? Color.red.opacity(0.08) : Theme.pillBg)
+                    .stroke(controller.statusKind == .error ? Color.red.opacity(0.22) : Theme.pillBorder, lineWidth: 1)
             )
         }
     }
@@ -620,105 +614,13 @@ struct PopoverView: View {
     // MARK: - Helpers
 
     private var isDisabled: Bool {
-        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isProcessing
+        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || controller.isProcessing
     }
 
     private var renderedAnalysis: AttributedString {
-        guard let md = analysisText else { return AttributedString() }
+        guard let md = controller.analysisText else { return AttributedString() }
         let formatted = formatAnalysisForDisplay(md)
         return (try? AttributedString(markdown: formatted, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(formatted)
-    }
-
-    private func humanize() {
-        guard settings.hasRequiredAPIKey else {
-            setErrorStatus("Add at least one API key in Settings.")
-            return
-        }
-
-        let input = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let attemptOrder = settings.providerAttemptOrder
-
-        isProcessing = true
-        clearStatus()
-        outputText = ""
-
-        Task {
-            var lastError: Error?
-
-            do {
-                for provider in attemptOrder {
-                    guard let apiKey = settings.apiKey(for: provider) else { continue }
-
-                    do {
-                        let result = try await service.humanize(
-                            text: input,
-                            tone: settings.tone,
-                            provider: provider,
-                            apiKey: apiKey
-                        )
-
-                        outputText = result.text
-                        analysisText = result.analysis
-                        copyToClipboard(result.text)
-                        let isFallback = result.provider != settings.provider || result.model != result.provider.defaultModel
-                        let providerLabel = isFallback ? "\(result.provider.displayName) (\(result.model))" : result.provider.displayName
-                        setSuccessStatus("Done via \(providerLabel) in \(formatLatencySeconds(result.latencyMs)) - copied to clipboard")
-                        isProcessing = false
-                        return
-                    } catch {
-                        lastError = error
-                    }
-                }
-
-                if let lastError {
-                    setErrorStatus(userFacingErrorMessage(for: lastError))
-                } else {
-                    setErrorStatus("Add at least one API key in Settings.")
-                }
-            }
-            isProcessing = false
-        }
-    }
-
-    private func normalizeWhitespace(_ text: String) -> String {
-        normalizeInputWhitespace(text)
-    }
-
-    private func copyToClipboard(_ text: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
-    }
-
-    private func setSuccessStatus(_ message: String) {
-        statusKind = .success
-        statusMessage = message
-    }
-
-    private func setErrorStatus(_ message: String) {
-        statusKind = .error
-        statusMessage = message
-    }
-
-    private func clearStatus() {
-        statusKind = .success
-        statusMessage = ""
-    }
-
-    private func userFacingErrorMessage(for error: Error) -> String {
-        guard let humanizeError = error as? HumanizeError else {
-            return "Something went wrong. Please try again."
-        }
-
-        switch humanizeError {
-        case .noAPIKey:
-            return "Add at least one API key in Settings."
-        case .invalidResponse:
-            return "The service returned an unreadable response. Please try again."
-        case .networkError:
-            return "Couldn't connect to the provider. Check your internet connection and try again."
-        case .apiError(_, let message):
-            return message
-        }
     }
 }
 

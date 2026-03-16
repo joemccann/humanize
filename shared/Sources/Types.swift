@@ -73,4 +73,28 @@ public enum HumanizeError: LocalizedError, Equatable {
             "API error (\(status)): \(message)"
         }
     }
+
+    /// User-facing message suitable for display in status badges and alerts.
+    public var userFacingDescription: String {
+        switch self {
+        case .noAPIKey:
+            "Add at least one API key in Settings."
+        case .invalidResponse:
+            "The service returned an unreadable response. Please try again."
+        case .networkError:
+            "Couldn't connect to the provider. Check your internet connection and try again."
+        case .apiError(_, let message):
+            message
+        }
+    }
+
+    /// Whether this error is critical enough to warrant an alert dialog (vs just a status badge).
+    public var isCritical: Bool {
+        switch self {
+        case .networkError, .noAPIKey:
+            true
+        case .invalidResponse, .apiError:
+            false
+        }
+    }
 }
