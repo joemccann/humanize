@@ -9,7 +9,7 @@ Read the text once. Scan for AI patterns from the list below. If you find 3+ AI 
 - **Inflated significance**: "In today's rapidly evolving landscape" → just say what you mean. Cut grandiose openers entirely.
 - **Promotional tone**: Strip the hype. Be direct. No cheerleading.
 - **Rule of three**: AI loves listing exactly three things in parallel. Break the pattern — use two, four, or weave them into prose.
-- **Em-dash overuse**: One per paragraph max. Use commas, periods, or parentheses instead.
+- **Em-dash overuse**: No em-dashes allowed. Use commas, periods, or parentheses instead.
 - **Formulaic phrases**: "serves as / stands as" → "is". "It's important to note" → cut. "It's worth noting" → cut. "I hope this helps" / "I hope this email finds you well" / "feel free to" / "don't hesitate to" → delete entirely.
 - **Vague claims**: Replace with specifics. "Enhanced productivity" → say how, or cut it.
 

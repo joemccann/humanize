@@ -281,6 +281,17 @@
     - `swift test` — 212 tests, 29 suites, 0 failures
     - `bash scripts/build-app.sh` — signed .app bundle produced
 
+## Completed
+
+- [x] T17: System prompt update — no em-dashes allowed, maintain analysis output for Details feature
+  - Updated `SystemPrompt.swift` em-dash rule from "One per paragraph max" to "No em-dashes allowed"
+  - Restored `---` delimiter and analysis section so Details feature works
+  - Updated docs: `README.md`, `AGENTS.md`, `docs/system-prompt-lite.md`, `docs/lessons.md`
+  - Verification:
+    - `swift build` — zero errors
+    - `swift test` — 212 tests, 29 suites, 0 failures
+    - Built and installed to `~/Applications/HumanizeBar.app`
+
 ## Up next
 
 - [ ] Streaming response display (SSE parsing for word-by-word output)

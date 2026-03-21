@@ -29,7 +29,8 @@ Bring your own key and select your provider. Cerebras is the default and recomme
 - Recommended default: Cerebras with automatic backup attempts to OpenAI and Anthropic
 - Tone selection: natural, casual, professional
 - Light, dark, and system appearance modes
-- "See Details" button reveals AI analysis of what patterns were found and fixed (rendered as rich markdown)
+- "See Details" button reveals an AI analysis of what patterns were found and fixed (rendered as rich markdown)
+- System prompt enforces natural writing rules including no em-dashes allowed
 - Built with SwiftUI, no Electron, no web views
 
 ## Requirements

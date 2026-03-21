@@ -72,3 +72,4 @@
 - iOS `TextEditor` grows unbounded by default; set `maxHeight` on input fields to prevent large pastes from pushing content off screen.
 - Use `AttributedString(markdown:, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))` to render inline markdown (bold, italic) in SwiftUI `Text` while preserving line breaks. Preprocess LLM dash lists into `•` bullets with blank-line spacing for readable display.
 - Modern iOS (17+) only needs a single 1024x1024 universal icon in `Assets.xcassets/AppIcon.appiconset`; Xcode derives all required sizes automatically. Share the same source PNG as macOS.
+- System prompt updates (e.g., em-dash restrictions) should be applied to `SystemPrompt.swift` only — it's a single source of truth shared across all providers and platforms (macOS menubar, macOS launcher, iOS).
