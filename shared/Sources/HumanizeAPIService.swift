@@ -221,6 +221,9 @@ public struct HumanizeAPIService: Sendable {
 
         switch provider {
         case .cerebras:
+            if let discovered = await fetchCerebrasModels(apiKey: apiKey) {
+                models.insert(contentsOf: discovered, at: 0)
+            }
             models.append(Self.cerebrasFallbackModel)
         case .openai:
             if let latest = await fetchLatestOpenAIModel(apiKey: apiKey) {
@@ -243,9 +246,28 @@ public struct HumanizeAPIService: Sendable {
         return uniqueModels
     }
 
+    private func fetchCerebrasModels(apiKey: String) async -> [String]? {
+        var request = URLRequest(url: URL(string: "https://api.cerebras.ai/v1/models")!)
+        request.httpMethod = "GET"
+        request.timeoutInterval = Self.defaultTimeoutSeconds
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        guard let (data, response) = try? await performRequest(request),
+              let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let models = json["data"] as? [[String: Any]] else {
+            return nil
+        }
+
+        let selectedModels = Self.selectCerebrasModels(models: models)
+        return selectedModels.isEmpty ? nil : selectedModels
+    }
+
     private func fetchLatestOpenAIModel(apiKey: String) async -> String? {
         var request = URLRequest(url: URL(string: "https://api.openai.com/v1/models")!)
         request.httpMethod = "GET"
+        request.timeoutInterval = Self.defaultTimeoutSeconds
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
 
         guard let (data, response) = try? await performRequest(request),
@@ -262,6 +284,7 @@ public struct HumanizeAPIService: Sendable {
     private func fetchLatestAnthropicModel(apiKey: String) async -> String? {
         var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/models")!)
         request.httpMethod = "GET"
+        request.timeoutInterval = Self.defaultTimeoutSeconds
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
@@ -275,6 +298,27 @@ public struct HumanizeAPIService: Sendable {
         }
 
         return Self.selectLatestAnthropicModel(models: models)
+    }
+
+    static func selectCerebrasModels(models: [[String: Any]]) -> [String] {
+        let disallowedTokens = ["audio", "embed", "embedding", "image", "rerank", "speech", "transcribe", "tts", "vision", "whisper"]
+
+        let filtered = models.compactMap { model -> (id: String, created: Int)? in
+            guard let id = model["id"] as? String, !id.isEmpty else { return nil }
+            guard !disallowedTokens.contains(where: { id.localizedCaseInsensitiveContains($0) }) else { return nil }
+            let created = model["created"] as? Int ?? 0
+            return (id, created)
+        }
+
+        let sorted = filtered.sorted { left, right in
+            let leftPriority = cerebrasPriority(for: left.id)
+            let rightPriority = cerebrasPriority(for: right.id)
+            if leftPriority != rightPriority { return leftPriority < rightPriority }
+            if left.created != right.created { return left.created > right.created }
+            return left.id > right.id
+        }
+
+        return sorted.map(\.id)
     }
 
     public static func selectLatestOpenAIModel(models: [[String: Any]]) -> String? {
@@ -314,6 +358,14 @@ public struct HumanizeAPIService: Sendable {
         }
 
         return sorted.first?["id"] as? String
+    }
+
+    private static func cerebrasPriority(for modelID: String) -> Int {
+        if modelID == AIProvider.cerebras.defaultModel { return 0 }
+        if modelID == Self.cerebrasFallbackModel { return 1 }
+        if modelID.localizedCaseInsensitiveContains("instruct") { return 2 }
+        if modelID.localizedCaseInsensitiveContains("chat") { return 3 }
+        return 4
     }
 
     // MARK: - Error mapping

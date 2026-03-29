@@ -1,5 +1,38 @@
 # Task Plan
 
+## Change: Restore live Cerebras requests by resolving account-accessible models dynamically
+
+## Dependency Graph
+
+- T30 -> T31
+- T31 -> T32
+- T32 -> T33
+
+## Tasks
+
+- [x] T30: Inspect live Cerebras behavior against the app's hardcoded model assumptions (`depends_on: []`)
+- [x] T31: Replace hardcoded Cerebras model candidates with `/v1/models` discovery and deterministic selection (`depends_on: [T30]`)
+- [x] T32: Add regression tests covering Cerebras model discovery and in-provider fallback behavior (`depends_on: [T31]`)
+- [x] T33: Run `swift build` and `swift test`; record review results (`depends_on: [T32]`)
+
+## Review
+
+- Root cause confirmed with live requests from the stored macOS `com.humanize.bar` defaults domain:
+  - `zai-glm-4.7` returned HTTP 404 `model_not_found`
+  - `gpt-oss-120b` returned HTTP 404 `model_not_found`
+  - `GET https://api.cerebras.ai/v1/models` returned only `qwen-3-235b-a22b-instruct-2507` and `llama3.1-8b` for this key
+  - a live chat-completions request using `qwen-3-235b-a22b-instruct-2507` succeeded
+- `HumanizeAPIService` now resolves Cerebras model candidates from `/v1/models` and tries the account-accessible models before falling back to the old hardcoded IDs if catalog discovery fails.
+- Added regression coverage for:
+  - Cerebras model-list ranking (`qwen` instruct model ahead of generic/base models)
+  - discovered Cerebras model usage before hardcoded fallbacks
+  - existing Cerebras model-not-found fallback path
+  - cache-safe test isolation for model-candidate scenarios
+- Verification passed:
+  - `swift build`
+  - `swift test` (`214 tests`, `29 suites`, `0 failures`)
+  - `xcodebuild test -project HumanizeMobile.xcodeproj -scheme HumanizeMobile -destination 'platform=iOS Simulator,OS=26.2,name=iPhone 17'` (`35 tests`, `7 suites`, `0 failures`)
+
 ## Change: Review latest provider/fallback updates, strengthen tests, and verify green
 
 ## Dependency Graph

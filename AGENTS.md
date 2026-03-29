@@ -2,7 +2,7 @@
 
 ## Project context
 
-`humanize` is a cross-platform app (macOS menu bar + iOS) that rewrites AI-generated text into natural, human-sounding prose. The codebase is a Swift monorepo with four targets: `HumanizeShared` (cross-platform library), `HumanizeBar` (macOS menu bar), `HumanizeLauncher` (macOS floating panel with global hotkey), and `HumanizeMobile` (iOS via Xcode project). Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs. Cerebras falls back to `gpt-oss-120b` on model_not_found, then cross-provider to OpenAI/Anthropic. Other providers stay strict. Responses are parsed into humanized text + optional AI analysis (split on `---` delimiter); a "Details" button reveals the analysis rendered as rich markdown via `AttributedString`. Analysis text is preprocessed by `formatAnalysisForDisplay()` to convert dash lists to bullet points with spacing.
+`humanize` is a cross-platform app (macOS menu bar + iOS) that rewrites AI-generated text into natural, human-sounding prose. The codebase is a Swift monorepo with four targets: `HumanizeShared` (cross-platform library), `HumanizeBar` (macOS menu bar), `HumanizeLauncher` (macOS floating panel with global hotkey), and `HumanizeMobile` (iOS via Xcode project). Users paste text, select a tone, and receive rewritten output via Cerebras, OpenAI, or Anthropic APIs. Cerebras now queries `/v1/models` with the configured key, prefers account-accessible chat/instruct models first, then falls back to `zai-glm-4.7` and `gpt-oss-120b` before cross-provider fallback to OpenAI/Anthropic. Other providers stay strict. Responses are parsed into humanized text + optional AI analysis (split on `---` delimiter); a "Details" button reveals the analysis rendered as rich markdown via `AttributedString`. Analysis text is preprocessed by `formatAnalysisForDisplay()` to convert dash lists to bullet points with spacing.
 
 The humanize orchestration flow (provider-attempt loop, result formatting, status management, clipboard copy) is centralized in `HumanizeController`, a shared `@Observable` class. Both macOS PopoverView and iOS HumanizeViewModel delegate to it. All API requests have a 30-second timeout. In-flight requests are cancelled on clear or new humanize calls. The model candidate cache has a 1-hour TTL.
 
@@ -12,6 +12,7 @@ Current provider models (from `AIProvider.defaultModel`):
 - Anthropic: `claude-sonnet-4-6`
 
 Runtime behavior:
+- Cerebras queries `/v1/models` with the configured API key, prefers account-accessible instruct/chat models, and retries with legacy compatibility models if catalog discovery is unavailable.
 - OpenAI/Anthropic query provider model catalogs with the configured API key and use the newest compatible available model.
 - If a model is unavailable (`model_not_found`/`not_found_error`), request handling retries with a provider compatibility fallback.
 
@@ -38,7 +39,7 @@ Runtime behavior:
 ## Validation policy
 
 - `swift build` must compile with zero errors and zero warnings.
-- `swift test` must pass all shared + macOS + launcher tests (212 tests, 29 suites) before any merge.
+- `swift test` must pass all shared + macOS + launcher tests (214 tests, 29 suites) before any merge.
 - `xcodebuild test` with `HumanizeMobileTests` scheme must pass all iOS tests.
 - `bash scripts/build-app.sh` must produce a signed `.app` bundle.
 

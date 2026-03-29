@@ -131,6 +131,18 @@ struct HumanizeAPIServiceTests {
         #expect(selected == "claude-sonnet-4-6")
     }
 
+    @Test("Selects best available Cerebras models from live model list")
+    func selectCerebrasModels() {
+        let models: [[String: Any]] = [
+            ["id": "llama3.1-8b", "created": 0],
+            ["id": "qwen-3-235b-a22b-instruct-2507", "created": 0],
+            ["id": "multimodal-image-preview", "created": 999],
+        ]
+
+        let selected = HumanizeAPIService.selectCerebrasModels(models: models)
+        #expect(selected == ["qwen-3-235b-a22b-instruct-2507", "llama3.1-8b"])
+    }
+
     // MARK: - Response parsing
 
     @Test("Parses OpenAI response correctly")
@@ -243,7 +255,7 @@ struct HumanizeAPIServiceTests {
     @Test("Successful OpenAI humanize call")
     func successfulOpenAICall() async throws {
         let client = MockHTTPClient { _ in
-            mockResponse(json: [
+            return mockResponse(json: [
                 "choices": [["message": ["content": "Natural sounding text"]]]
             ])
         }
@@ -393,8 +405,16 @@ struct HumanizeAPIServiceTests {
 
     @Test("Successful Cerebras humanize call")
     func successfulCerebrasCall() async throws {
-        let client = MockHTTPClient { _ in
-            mockResponse(json: [
+        let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]
+                    ]
+                ])
+            }
+
+            return mockResponse(json: [
                 "choices": [["message": ["content": "Natural sounding text"]]]
             ])
         }
@@ -404,13 +424,52 @@ struct HumanizeAPIServiceTests {
             text: "AI sounding text",
             tone: .natural,
             provider: .cerebras,
-            apiKey: "cbr-test"
+            apiKey: "cbr-success-test"
         )
 
         #expect(result.text == "Natural sounding text")
         #expect(result.provider == .cerebras)
-        #expect(result.model == "zai-glm-4.7")
+        #expect(result.model == "qwen-3-235b-a22b-instruct-2507")
         #expect(result.latencyMs >= 0)
+    }
+
+    @Test("Cerebras uses discovered model catalog before hardcoded fallbacks")
+    func cerebrasUsesDiscoveredModelsFirst() async throws {
+        let modelsRequested = RequestedModels()
+        let client = MockHTTPClient { request in
+            let path = request.url?.path ?? ""
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": "llama3.1-8b", "created": 0],
+                        ["id": "qwen-3-235b-a22b-instruct-2507", "created": 0],
+                    ]
+                ])
+            }
+
+            let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
+            let model = body["model"] as! String
+            await modelsRequested.append(model)
+            #expect(model == "qwen-3-235b-a22b-instruct-2507")
+
+            return mockResponse(json: [
+                "choices": [["message": ["content": "Catalog-selected result"]]]
+            ])
+        }
+
+        let service = HumanizeAPIService(httpClient: client)
+        let result = try await service.humanize(
+            text: "AI sounding text",
+            tone: .natural,
+            provider: .cerebras,
+            apiKey: "cbr-catalog-test"
+        )
+
+        #expect(result.provider == .cerebras)
+        #expect(result.model == "qwen-3-235b-a22b-instruct-2507")
+        #expect(result.text == "Catalog-selected result")
+        let models = await modelsRequested.values
+        #expect(models == ["qwen-3-235b-a22b-instruct-2507"])
     }
 
     @Test("Successful Anthropic humanize call")
@@ -703,6 +762,16 @@ struct HumanizeAPIServiceTests {
     func cerebrasModelFallback() async throws {
         let modelsRequested = RequestedModels()
         let client = MockHTTPClient { request in
+            let path = request.url?.path ?? ""
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": AIProvider.cerebras.defaultModel, "created": 2000],
+                        ["id": "gpt-oss-120b", "created": 1000],
+                    ]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let model = body["model"] as! String
             await modelsRequested.append(model)
@@ -721,7 +790,7 @@ struct HumanizeAPIServiceTests {
 
         let service = HumanizeAPIService(httpClient: client)
         let result = try await service.humanize(
-            text: "test", tone: .natural, provider: .cerebras, apiKey: "cbr-test"
+            text: "test", tone: .natural, provider: .cerebras, apiKey: "cbr-fallback-test"
         )
 
         #expect(result.text == "Fallback result")

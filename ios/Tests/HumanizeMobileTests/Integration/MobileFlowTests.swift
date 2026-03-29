@@ -74,6 +74,12 @@ struct MobileFlowTests {
         store.cerebrasAPIKey = "cbr-test"
 
         let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let content = messages[1]["content"] as! String
@@ -132,6 +138,12 @@ struct MobileFlowTests {
 
         let client = MockHTTPClient { request in
             #expect(request.url?.host == "api.cerebras.ai")
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let content = messages[1]["content"] as! String

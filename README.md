@@ -65,7 +65,7 @@ Then open `HumanizeMobile/HumanizeMobile.xcodeproj` in Xcode and build the `Huma
 swift test
 ```
 
-212 tests across 29 suites covering types, settings persistence, API service (request building, response parsing, error handling, request timeouts), fallback behavior, whitespace normalization, structured response parsing, HumanizeController (orchestration, task cancellation, clipboard integration), error messaging, model cache invalidation, multi-provider integration, and UI view instantiation.
+214 tests across 29 suites covering types, settings persistence, API service (request building, response parsing, dynamic model discovery, error handling, request timeouts), fallback behavior, whitespace normalization, structured response parsing, HumanizeController (orchestration, task cancellation, clipboard integration), error messaging, model cache invalidation, multi-provider integration, and UI view instantiation.
 
 ### iOS (Xcode)
 
@@ -163,7 +163,7 @@ All settings are managed in-app via the settings panel:
 
 - **Provider** — Cerebras (recommended), OpenAI, or Anthropic
 - **API Keys** — stored in UserDefaults per provider
-- **Cerebras fallback** — tries `zai-glm-4.7`, then `gpt-oss-120b`, then OpenAI, then Anthropic; other providers stay strict
+- **Cerebras fallback** — queries `/v1/models` for account-accessible models first, then tries legacy compatibility models (`zai-glm-4.7`, `gpt-oss-120b`), then OpenAI, then Anthropic; other providers stay strict
 - **Tone** — natural, casual, or professional
 - **Appearance** — system, light, or dark
 
@@ -175,7 +175,7 @@ Current default models by provider (source of truth: `AIProvider.defaultModel` i
 - **OpenAI** — `gpt-5.2-chat-latest`
 - **Anthropic** — `claude-sonnet-4-6`
 
-At request time, OpenAI and Anthropic model lists are queried with your API key and the newest compatible available model is selected automatically. If a selected model is unavailable, the app retries with a compatibility fallback model for that provider.
+At request time, Cerebras, OpenAI, and Anthropic model lists are queried with your API key and the newest compatible available model is selected automatically. For Cerebras, account-accessible instruct/chat models are preferred before the legacy hardcoded compatibility models. If a selected model is unavailable, the app retries with a compatibility fallback model for that provider.
 
 ## Architecture
 

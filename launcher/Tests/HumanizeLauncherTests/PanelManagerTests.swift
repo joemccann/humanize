@@ -56,11 +56,11 @@ struct PanelManagerTests {
         #expect(manager.isPanelVisible == false)
     }
 
-    @Test("PanelManager panel is a FloatingPanel instance")
-    func panelType() {
+    @Test("PanelManager configures panel content")
+    func panelContent() {
         let store = SettingsStore(defaults: freshDefaults())
         let manager = PanelManager(settingsStore: store)
-        #expect(manager.panel is FloatingPanel)
+        #expect(manager.panel.contentView != nil)
     }
 }
 #endif

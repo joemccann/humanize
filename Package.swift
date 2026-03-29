@@ -40,6 +40,8 @@ let package = Package(
     products: [
         .library(name: "HumanizeShared", targets: ["HumanizeShared"]),
         .library(name: "HumanizeTestSupport", targets: ["HumanizeTestSupport"]),
+        .executable(name: "HumanizeBar", targets: ["HumanizeBar"]),
+        .executable(name: "HumanizeLauncher", targets: ["HumanizeLauncher"]),
     ],
     dependencies: [
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "2.2.0"),

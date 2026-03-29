@@ -23,7 +23,7 @@ struct LauncherAppDelegateTests {
     @Test("LauncherAppDelegate has a panel manager")
     func hasPanelManager() {
         let delegate = LauncherAppDelegate()
-        #expect(delegate.panelManager != nil)
+        #expect(delegate.panelManager.isPanelVisible == false)
     }
 
     @Test("LauncherAppDelegate panel manager starts hidden")

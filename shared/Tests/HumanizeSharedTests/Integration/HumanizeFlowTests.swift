@@ -8,8 +8,16 @@ struct HumanizeFlowTests {
     @Test("Full flow: input text → service → correct result")
     func fullFlow() async throws {
         let client = MockHTTPClient { request in
-            let url = request.url!.absoluteString
-            #expect(url == "https://api.cerebras.ai/v1/chat/completions")
+            let path = request.url!.path
+            if path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [
+                        ["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]
+                    ]
+                ])
+            }
+
+            #expect(path == "/v1/chat/completions")
 
             return mockResponse(json: [
                 "choices": [["message": ["content": "A naturally written sentence."]]]
@@ -21,12 +29,12 @@ struct HumanizeFlowTests {
             text: "This is a very AI-sounding sentence that needs humanizing.",
             tone: .natural,
             provider: .cerebras,
-            apiKey: "cbr-test"
+            apiKey: "cbr-flow-test"
         )
 
         #expect(result.text == "A naturally written sentence.")
         #expect(result.provider == .cerebras)
-        #expect(result.model == "zai-glm-4.7")
+        #expect(result.model == "qwen-3-235b-a22b-instruct-2507")
     }
 
     @Test("Error flow: service throws on API error")

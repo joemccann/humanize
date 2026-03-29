@@ -9,7 +9,14 @@ ICON_PATH="${PROJECT_DIR}/shared/Resources/AppIcon.icns"
 
 echo "Building ${APP_NAME}..."
 cd "$PROJECT_DIR"
-swift build -c release --target HumanizeBar
+swift build -c release --product "${APP_NAME}"
+BIN_DIR="$(swift build -c release --show-bin-path)"
+BIN_PATH="${BIN_DIR}/${APP_NAME}"
+
+if [[ ! -f "${BIN_PATH}" ]]; then
+    echo "Error: missing release binary at ${BIN_PATH}" >&2
+    exit 1
+fi
 
 echo "Creating app bundle..."
 rm -rf "$APP_DIR"
@@ -17,7 +24,7 @@ mkdir -p "${APP_DIR}/Contents/MacOS"
 mkdir -p "${APP_DIR}/Contents/Resources"
 
 # Copy binary
-cp ".build/release/${APP_NAME}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
+cp "${BIN_PATH}" "${APP_DIR}/Contents/MacOS/${APP_NAME}"
 
 # Copy Info.plist
 cp "macos/Info.plist" "${APP_DIR}/Contents/"

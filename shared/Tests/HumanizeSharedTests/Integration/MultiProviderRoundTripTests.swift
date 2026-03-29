@@ -8,6 +8,12 @@ struct MultiProviderRoundTripTests {
     @Test("Same text, all tones, Cerebras - each produces valid result")
     func allTonesCerebras() async throws {
         let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
             let body = try! JSONSerialization.jsonObject(with: request.httpBody!) as! [String: Any]
             let messages = body["messages"] as! [[String: Any]]
             let userContent = messages[1]["content"] as! String
@@ -178,6 +184,11 @@ struct MultiProviderRoundTripTests {
         // Verify Cerebras auth header
         let cerebrasClient = MockHTTPClient { request in
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer cbr-specific")
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
             return mockResponse(json: [
                 "choices": [["message": ["content": "ok"]]]
             ])

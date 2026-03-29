@@ -2,6 +2,37 @@
 
 ## Active milestone
 
+### Change: Restore live Cerebras requests by resolving account-accessible models dynamically
+
+#### Dependency Graph
+
+- T34 -> T35
+- T35 -> T36
+- T36 -> T37
+
+#### Tasks
+
+- [x] T34: Inspect live Cerebras behavior against the app's hardcoded model assumptions (`depends_on: []`)
+- [x] T35: Replace hardcoded Cerebras model candidates with `/v1/models` discovery and deterministic selection (`depends_on: [T34]`)
+- [x] T36: Add regression tests covering Cerebras model discovery and in-provider fallback behavior (`depends_on: [T35]`)
+- [x] T37: Run `swift build` and `swift test`; record review results (`depends_on: [T36]`)
+
+#### Review
+
+- Confirmed the current hardcoded Cerebras candidates were invalid for the active key:
+  - `zai-glm-4.7` -> HTTP 404 `model_not_found`
+  - `gpt-oss-120b` -> HTTP 404 `model_not_found`
+- Confirmed the active Cerebras account-accessible catalog via `/v1/models`:
+  - `qwen-3-235b-a22b-instruct-2507`
+  - `llama3.1-8b`
+- Verified a live `POST /v1/chat/completions` request succeeded when using `qwen-3-235b-a22b-instruct-2507`.
+- Updated `HumanizeAPIService` to front-load discovered Cerebras models from `/v1/models` with deterministic ranking, while preserving the old hardcoded candidates as a fallback when catalog discovery is unavailable.
+- Added regressions for discovered-model selection, discovered-model request routing, and existing Cerebras fallback behavior.
+- Verification complete:
+  - `swift build`
+  - `swift test` (`214 tests`, `29 suites`, `0 failures`)
+  - `xcodebuild test -project HumanizeMobile.xcodeproj -scheme HumanizeMobile -destination 'platform=iOS Simulator,OS=26.2,name=iPhone 17'` (`35 tests`, `7 suites`, `0 failures`)
+
 ### Change: Documentation synchronization before sign-off
 
 #### Dependency Graph
