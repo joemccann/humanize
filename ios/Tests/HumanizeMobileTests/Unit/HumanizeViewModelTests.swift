@@ -23,16 +23,28 @@ struct HumanizeViewModelTests {
     }
 
     private func successClient(text: String = "Humanized output") -> MockHTTPClient {
-        MockHTTPClient { _ in
-            mockResponse(json: [
+        MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
+            return mockResponse(json: [
                 "choices": [["message": ["content": text]]]
             ])
         }
     }
 
     private func errorClient(statusCode: Int = 500, message: String = "Server error") -> MockHTTPClient {
-        MockHTTPClient { _ in
-            mockResponse(json: ["error": ["message": message]], statusCode: statusCode)
+        MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
+            return mockResponse(json: ["error": ["message": message]], statusCode: statusCode)
         }
     }
 

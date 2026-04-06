@@ -25,6 +25,12 @@ struct MobileFlowTests {
 
         let client = MockHTTPClient { request in
             #expect(request.url?.host == "api.cerebras.ai")
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
             return mockResponse(json: [
                 "choices": [["message": ["content": "Mobile humanized text"]]]
             ])
@@ -40,6 +46,7 @@ struct MobileFlowTests {
 
         #expect(result.text == "Mobile humanized text")
         #expect(result.provider == .cerebras)
+        #expect(result.model == "qwen-3-235b-a22b-instruct-2507")
     }
 
     @Test("Settings configured for mobile → service uses correct provider")
@@ -110,8 +117,14 @@ struct MobileFlowTests {
 
     @Test("Clipboard copy can be called with humanize result")
     func clipboardIntegration() async throws {
-        let client = MockHTTPClient { _ in
-            mockResponse(json: [
+        let client = MockHTTPClient { request in
+            if request.url?.path == "/v1/models" {
+                return mockResponse(json: [
+                    "data": [["id": "qwen-3-235b-a22b-instruct-2507", "created": 0]]
+                ])
+            }
+
+            return mockResponse(json: [
                 "choices": [["message": ["content": "Clipboard test result"]]]
             ])
         }
